@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
     target_weight DECIMAL(5,2), -- в кг
     goal_deadline DATE,
     activity_level TEXT CHECK (activity_level IN ('sedentary', 'light', 'moderate', 'active', 'very_active')),
-    goal_type TEXT CHECK (goal_type IN ('lose', 'gain', 'maintain')),
+    goal_type TEXT CHECK (goal_type IN ('lose', 'gain', 'maintain', 'lose_weight', 'gain_weight', 'maintain_weight', 'build_muscle')),
     
     -- Дополнительные данные
     health_conditions TEXT[],
@@ -145,34 +145,45 @@ ALTER TABLE weight_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE health_analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 
--- Политики для users (упрощенные для начала)
+-- Политики для users
 DROP POLICY IF EXISTS "Enable all for users" ON users;
-CREATE POLICY "Enable all for users" ON users FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
+DROP POLICY IF EXISTS "Users can insert own profile" ON users;
+
+CREATE POLICY "Users can view own profile" ON users
+    FOR SELECT USING (telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint);
+
+CREATE POLICY "Users can update own profile" ON users
+    FOR UPDATE USING (telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint);
+
+CREATE POLICY "Users can insert own profile" ON users
+    FOR INSERT WITH CHECK (telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint);
 
 -- Политики для остальных таблиц (доступ только к своим данным)
-DROP POLICY IF EXISTS "Users own food_items" ON food_items;
-CREATE POLICY "Users own food_items" ON food_items
-    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own data" ON food_items;
+CREATE POLICY "Users own data" ON food_items
+    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-DROP POLICY IF EXISTS "Users own meal_entries" ON meal_entries;
-CREATE POLICY "Users own meal_entries" ON meal_entries
-    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own data" ON meal_entries;
+CREATE POLICY "Users own data" ON meal_entries
+    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-DROP POLICY IF EXISTS "Users own water_entries" ON water_entries;
-CREATE POLICY "Users own water_entries" ON water_entries
-    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own data" ON water_entries;
+CREATE POLICY "Users own data" ON water_entries
+    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-DROP POLICY IF EXISTS "Users own weight_entries" ON weight_entries;
-CREATE POLICY "Users own weight_entries" ON weight_entries
-    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own data" ON weight_entries;
+CREATE POLICY "Users own data" ON weight_entries
+    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-DROP POLICY IF EXISTS "Users own health_analyses" ON health_analyses;
-CREATE POLICY "Users own health_analyses" ON health_analyses
-    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own data" ON health_analyses;
+CREATE POLICY "Users own data" ON health_analyses
+    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-DROP POLICY IF EXISTS "Users own chat_messages" ON chat_messages;
-CREATE POLICY "Users own chat_messages" ON chat_messages
-    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own data" ON chat_messages;
+CREATE POLICY "Users own data" ON chat_messages
+    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
 -- Функции для получения статистики
 DROP FUNCTION IF EXISTS get_daily_nutrition(UUID, DATE);
@@ -214,6 +225,10 @@ BEGIN
     AND DATE(created_at) = target_date;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Вставка тестовых данных (можно убрать в продакшене)
+-- INSERT INTO users (telegram_id, username, first_name, name, age, height, gender, current_weight, target_weight, goal_type, activity_level, daily_calorie_target, daily_water_target)
+-- VALUES (123456789, 'test_user', 'Анна', 'Анна Тестова', 28, 165, 'female', 65.0, 60.0, 'lose', 'moderate', 1800, 2000);
 
 -- Комментарии к таблицам
 COMMENT ON TABLE users IS 'Таблица пользователей с их персональными данными и целями';

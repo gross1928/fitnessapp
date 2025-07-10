@@ -1,11 +1,23 @@
 import React from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] })
 
+// Viewport configuration (moved from metadata)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f0f0f' }
+  ],
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXTAUTH_URL || 'https://fitnessapp-production.up.railway.app'),
   title: 'ДаЕда - Персональный AI-коуч по здоровью',
   description: 'Умный помощник для здорового питания, трекинга активности и анализа здоровья',
   keywords: 'здоровье, питание, калории, тренировки, AI, ИИ, коуч',
@@ -13,11 +25,6 @@ export const metadata: Metadata = {
   creator: 'ДаЕда',
   publisher: 'ДаЕда',
   robots: 'index, follow',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f0f0f' }
-  ],
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
@@ -26,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'ДаЕда - Персональный AI-коуч по здоровью',
     description: 'Умный помощник для здорового питания, трекинга активности и анализа здоровья',
-    url: 'https://daeda-health.railway.app',
+    url: '/',
     siteName: 'ДаЕда',
     images: [
       {

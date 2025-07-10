@@ -92,7 +92,7 @@ export function MetricCard({
           </div>
           {target && (
             <span className="text-xs opacity-70">
-              из {target.toLocaleString('ru-RU')}
+              / {target.toLocaleString('ru-RU')}
             </span>
           )}
         </div>

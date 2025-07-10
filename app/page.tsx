@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   Heart, 
   Droplets, 
@@ -163,12 +164,73 @@ function ProgressChart({ data }: { data: any[] }) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000)
     return () => clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    // Проверяем авторизацию и онбординг пользователя
+    const checkUserStatus = async () => {
+      try {
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          const tg = window.Telegram.WebApp
+          tg.ready()
+          
+          const telegramUser = tg.initDataUnsafe?.user
+          if (!telegramUser?.id) {
+            // Если нет данных Telegram, показываем заглушку
+            setLoading(false)
+            return
+          }
+
+          // Проверяем профиль пользователя
+          const response = await fetch('/api/users/profile', {
+            headers: {
+              'x-telegram-user-id': telegramUser.id.toString()
+            }
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            if (data.success && data.data.is_onboarded) {
+              setUser(data.data)
+            } else {
+              // Пользователь не прошел онбординг
+              router.push('/onboarding')
+              return
+            }
+          } else {
+            // Пользователь не найден, перенаправляем на онбординг
+            router.push('/onboarding')
+            return
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка проверки пользователя:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkUserStatus()
+  }, [router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Загрузка...</p>
+        </div>
+      </div>
+    )
+  }
   
   const timeOfDay = currentTime.getHours() < 12 ? 'утром' : 
                    currentTime.getHours() < 18 ? 'днем' : 'вечером'
@@ -182,7 +244,7 @@ export default function DashboardPage() {
             ДаЕда
           </h1>
           <p className="text-gray-600">
-            Добро пожаловать, {mockData.user.name}! 
+            Добро пожаловать, {user?.name || 'Пользователь'}! 
             <br />
             Хорошего дня {timeOfDay} 👋
           </p>

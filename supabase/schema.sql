@@ -167,7 +167,7 @@ CREATE POLICY "Users own data" ON water_entries
     FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
 CREATE POLICY "Users own data" ON weight_entries
-    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.calls', true)::jsonb ->> 'telegram_id')::bigint));
+    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
 CREATE POLICY "Users own data" ON health_analyses
     FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));

@@ -16,33 +16,7 @@ import {
   Activity
 } from 'lucide-react'
 
-// Мок данные для демонстрации
-const mockData = {
-  user: {
-    name: 'Анна',
-    age: 28,
-    currentWeight: 65,
-    targetWeight: 60,
-    height: 165
-  },
-  today: {
-    calories: { current: 1450, target: 1800 },
-    proteins: { current: 85, target: 120 },
-    fats: { current: 45, target: 60 },
-    carbs: { current: 150, target: 200 },
-    water: { current: 1200, target: 2000 },
-    weight: 64.8,
-    steps: 8420,
-    sleep: 7.5
-  },
-  weeklyProgress: [
-    { date: '2024-01-15', calories: 1600, weight: 65.2 },
-    { date: '2024-01-16', calories: 1750, weight: 65.0 },
-    { date: '2024-01-17', calories: 1580, weight: 64.9 },
-    { date: '2024-01-18', calories: 1620, weight: 64.8 },
-    { date: '2024-01-19', calories: 1450, weight: 64.8 },
-  ]
-}
+
 
 function MetricCard({ 
   title, 
@@ -129,39 +103,7 @@ function QuickActionButton({
   )
 }
 
-function ProgressChart({ data }: { data: any[] }) {
-  return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-        <TrendingUp className="w-5 h-5 mr-2 text-primary" />
-        Прогресс за неделю
-      </h3>
-      
-      <div className="space-y-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">
-              {new Date(item.date).toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'short' 
-              })}
-            </span>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <Apple className="w-4 h-4 text-orange-500 mr-1" />
-                <span className="text-sm font-medium">{item.calories}</span>
-              </div>
-              <div className="flex items-center">
-                <Weight className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm font-medium">{item.weight} кг</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -211,8 +153,14 @@ export default function DashboardPage() {
             console.log('Результат регистрации:', registerData)
             
             if (registerData.success) {
+              console.log('Результат проверки:', {
+                needsOnboarding: registerData.needsOnboarding,
+                isNewUser: registerData.isNewUser,
+                message: registerData.message
+              })
+              
               if (registerData.needsOnboarding) {
-                console.log('Пользователю нужен онбординг')
+                console.log('Пользователю нужен онбординг, перенаправляем...')
                 router.push('/onboarding')
                 return
               } else {
@@ -254,6 +202,43 @@ export default function DashboardPage() {
   
   const timeOfDay = currentTime.getHours() < 12 ? 'утром' : 
                    currentTime.getHours() < 18 ? 'днем' : 'вечером'
+
+  // Если пользователь есть, но нет целей по питанию - перенаправляем на онбординг
+  if (user && (!user.daily_calorie_target || !user.goal_type)) {
+    console.log('У пользователя нет целей по питанию, нужен онбординг')
+    router.push('/onboarding')
+    return null
+  }
+
+  // Если нет пользователя, показываем заглушку
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">ДаЕда</h1>
+          <p className="text-gray-600 mb-6">
+            Пожалуйста, запустите приложение через Telegram
+          </p>
+          <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
+            <p className="text-sm text-gray-500">
+              Это приложение работает только как Telegram WebApp
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Используем данные пользователя вместо моков
+  const todayData = {
+    calories: { current: 0, target: user.daily_calorie_target || 2000 },
+    proteins: { current: 0, target: user.daily_protein_target || 100 },
+    fats: { current: 0, target: user.daily_fat_target || 60 },
+    carbs: { current: 0, target: user.daily_carb_target || 200 },
+    water: { current: 0, target: user.daily_water_target || 2000 },
+    weight: user.current_weight || 0,
+    steps: 0
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
@@ -274,22 +259,20 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Калории"
-            value={mockData.today.calories.current}
-            target={mockData.today.calories.target}
+            value={todayData.calories.current}
+            target={todayData.calories.target}
             unit="ккал"
             icon={<Apple className="w-6 h-6" />}
             color="gradient-orange"
-            trend={{ value: 12, isPositive: true }}
           />
           
           <MetricCard
             title="Вода"
-            value={mockData.today.water.current}
-            target={mockData.today.water.target}
+            value={todayData.water.current}
+            target={todayData.water.target}
             unit="мл"
             icon={<Droplets className="w-6 h-6" />}
             color="gradient-blue"
-            trend={{ value: 8, isPositive: true }}
           />
         </div>
 
@@ -297,8 +280,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-3 gap-3">
           <MetricCard
             title="Белки"
-            value={mockData.today.proteins.current}
-            target={mockData.today.proteins.target}
+            value={todayData.proteins.current}
+            target={todayData.proteins.target}
             unit="г"
             icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-orange-500 font-bold">Б</div>}
             color="bg-orange-400"
@@ -306,8 +289,8 @@ export default function DashboardPage() {
           
           <MetricCard
             title="Жиры"
-            value={mockData.today.fats.current}
-            target={mockData.today.fats.target}
+            value={todayData.fats.current}
+            target={todayData.fats.target}
             unit="г"
             icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-yellow-500 font-bold">Ж</div>}
             color="bg-yellow-400"
@@ -315,8 +298,8 @@ export default function DashboardPage() {
           
           <MetricCard
             title="Углеводы"
-            value={mockData.today.carbs.current}
-            target={mockData.today.carbs.target}
+            value={todayData.carbs.current}
+            target={todayData.carbs.target}
             unit="г"
             icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-green-500 font-bold">У</div>}
             color="bg-green-400"
@@ -326,21 +309,19 @@ export default function DashboardPage() {
         {/* Other metrics */}
         <div className="grid grid-cols-2 gap-4">
           <MetricCard
-            title="Вес"
-            value={mockData.today.weight}
+            title="Текущий вес"
+            value={todayData.weight}
             unit="кг"
             icon={<Weight className="w-6 h-6" />}
             color="gradient-green"
-            trend={{ value: 2, isPositive: true }}
           />
           
           <MetricCard
             title="Активность"
-            value={mockData.today.steps}
+            value={todayData.steps}
             unit="шагов"
             icon={<Activity className="w-6 h-6" />}
             color="gradient-purple"
-            trend={{ value: 15, isPositive: true }}
           />
         </div>
 
@@ -391,7 +372,22 @@ export default function DashboardPage() {
         </div>
 
         {/* Progress Chart */}
-        <ProgressChart data={mockData.weeklyProgress} />
+        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-primary" />
+            Прогресс за неделю
+          </h3>
+          
+          <div className="text-center py-8">
+            <div className="text-gray-400 mb-4">
+              <TrendingUp className="w-12 h-12 mx-auto" />
+            </div>
+            <p className="text-gray-500 text-sm">
+              Начните отслеживать питание и вес,<br />
+              чтобы увидеть свой прогресс
+            </p>
+          </div>
+        </div>
 
         {/* AI Coach suggestion */}
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg">

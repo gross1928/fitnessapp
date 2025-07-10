@@ -61,12 +61,32 @@ export async function POST(request: NextRequest) {
         // Не критичная ошибка, возвращаем существующего пользователя
       }
 
+      // Проверяем, заполнены ли все необходимые поля для онбординга
+      const needsOnboarding = !existingUser.age || 
+                             !existingUser.height || 
+                             !existingUser.gender || 
+                             !existingUser.current_weight || 
+                             !existingUser.target_weight || 
+                             !existingUser.goal_type || 
+                             !existingUser.activity_level
+
+      console.log('Проверка онбординга для существующего пользователя:', {
+        age: !!existingUser.age,
+        height: !!existingUser.height,
+        gender: !!existingUser.gender,
+        current_weight: !!existingUser.current_weight,
+        target_weight: !!existingUser.target_weight,
+        goal_type: !!existingUser.goal_type,
+        activity_level: !!existingUser.activity_level,
+        needsOnboarding
+      })
+
       return NextResponse.json({
         success: true,
         data: users && users.length > 0 ? users[0] : existingUser,
         isNewUser: false,
-        needsOnboarding: !existingUser.name || !existingUser.age || !existingUser.current_weight,
-        message: 'Пользователь найден'
+        needsOnboarding,
+        message: needsOnboarding ? 'Требуется завершить онбординг' : 'Пользователь найден'
       })
     } else {
       console.log('Создаем нового пользователя')

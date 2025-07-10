@@ -1,10 +1,7 @@
 -- ДаЕда Health Coach Database Schema
 -- Создание таблиц для персонального AI-коуча по здоровью
 
--- Включение Row Level Security
--- ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
-
--- Создание расширений
+-- Включение расширений
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -21,11 +18,12 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT,
     age INTEGER,
     height INTEGER, -- в см
+    gender TEXT CHECK (gender IN ('male', 'female')),
     current_weight DECIMAL(5,2), -- в кг
     target_weight DECIMAL(5,2), -- в кг
     goal_deadline DATE,
     activity_level TEXT CHECK (activity_level IN ('sedentary', 'light', 'moderate', 'active', 'very_active')),
-    goal_type TEXT CHECK (goal_type IN ('lose_weight', 'gain_weight', 'maintain_weight', 'build_muscle')),
+    goal_type TEXT CHECK (goal_type IN ('lose', 'gain', 'maintain')),
     
     -- Дополнительные данные
     health_conditions TEXT[],
@@ -132,6 +130,7 @@ END;
 $$ language 'plpgsql';
 
 -- Триггер для автоматического обновления updated_at в таблице users
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at 
     BEFORE UPDATE ON users 
     FOR EACH ROW 
@@ -146,36 +145,37 @@ ALTER TABLE weight_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE health_analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 
--- Политики для users
-CREATE POLICY "Users can view own profile" ON users
-    FOR SELECT USING (telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint);
-
-CREATE POLICY "Users can update own profile" ON users
-    FOR UPDATE USING (telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint);
-
-CREATE POLICY "Users can insert own profile" ON users
-    FOR INSERT WITH CHECK (telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint);
+-- Политики для users (упрощенные для начала)
+DROP POLICY IF EXISTS "Enable all for users" ON users;
+CREATE POLICY "Enable all for users" ON users FOR ALL USING (true);
 
 -- Политики для остальных таблиц (доступ только к своим данным)
-CREATE POLICY "Users own data" ON food_items
-    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own food_items" ON food_items;
+CREATE POLICY "Users own food_items" ON food_items
+    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-CREATE POLICY "Users own data" ON meal_entries
-    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own meal_entries" ON meal_entries;
+CREATE POLICY "Users own meal_entries" ON meal_entries
+    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-CREATE POLICY "Users own data" ON water_entries
-    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own water_entries" ON water_entries;
+CREATE POLICY "Users own water_entries" ON water_entries
+    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-CREATE POLICY "Users own data" ON weight_entries
-    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own weight_entries" ON weight_entries;
+CREATE POLICY "Users own weight_entries" ON weight_entries
+    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-CREATE POLICY "Users own data" ON health_analyses
-    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own health_analyses" ON health_analyses;
+CREATE POLICY "Users own health_analyses" ON health_analyses
+    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
-CREATE POLICY "Users own data" ON chat_messages
-    FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+DROP POLICY IF EXISTS "Users own chat_messages" ON chat_messages;
+CREATE POLICY "Users own chat_messages" ON chat_messages
+    FOR ALL USING (user_id IN (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
 
 -- Функции для получения статистики
+DROP FUNCTION IF EXISTS get_daily_nutrition(UUID, DATE);
 CREATE OR REPLACE FUNCTION get_daily_nutrition(user_uuid UUID, target_date DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE (
     total_calories BIGINT,
@@ -198,6 +198,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP FUNCTION IF EXISTS get_daily_water(UUID, DATE);
 CREATE OR REPLACE FUNCTION get_daily_water(user_uuid UUID, target_date DATE DEFAULT CURRENT_DATE)
 RETURNS TABLE (
     total_water BIGINT,
@@ -213,10 +214,6 @@ BEGIN
     AND DATE(created_at) = target_date;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Вставка тестовых данных (можно убрать в продакшене)
--- INSERT INTO users (telegram_id, username, first_name, name, age, height, current_weight, target_weight, goal_type, activity_level, daily_calorie_target, daily_water_target)
--- VALUES (123456789, 'test_user', 'Анна', 'Анна Тестова', 28, 165, 65.0, 60.0, 'lose_weight', 'moderate', 1800, 2000);
 
 -- Комментарии к таблицам
 COMMENT ON TABLE users IS 'Таблица пользователей с их персональными данными и целями';

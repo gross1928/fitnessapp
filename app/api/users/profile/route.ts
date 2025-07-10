@@ -15,20 +15,37 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Получаем профиль пользователя
-    const { data: user, error } = await supabase
+    console.log('Ищем пользователя с telegram_id:', telegramId)
+
+    // Получаем профиль пользователя без .single() для лучшей обработки ошибок
+    const { data: users, error } = await supabase
       .from('users')
       .select('*')
       .eq('telegram_id', parseInt(telegramId))
-      .single()
 
     if (error) {
-      console.error('Ошибка получения профиля:', error)
+      console.error('Ошибка запроса к БД:', error)
       return NextResponse.json(
-        { success: false, error: 'Пользователь не найден' },
+        { success: false, error: 'Ошибка базы данных' },
+        { status: 500 }
+      )
+    }
+
+    // Проверяем, найден ли пользователь
+    if (!users || users.length === 0) {
+      console.log('Пользователь не найден, нужен онбординг')
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Пользователь не найден',
+          needsOnboarding: true 
+        },
         { status: 404 }
       )
     }
+
+    const user = users[0]
+    console.log('Пользователь найден:', user.name || user.telegram_id)
 
     return NextResponse.json({
       success: true,
@@ -59,7 +76,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Обновляем профиль пользователя
-    const { data: user, error } = await supabase
+    const { data: users, error } = await supabase
       .from('users')
       .update({
         ...body,
@@ -67,7 +84,6 @@ export async function PUT(request: NextRequest) {
       })
       .eq('telegram_id', parseInt(telegramId))
       .select()
-      .single()
 
     if (error) {
       console.error('Ошибка обновления профиля:', error)
@@ -77,9 +93,16 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    if (!users || users.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Пользователь не найден для обновления' },
+        { status: 404 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
-      data: user,
+      data: users[0],
       message: 'Профиль успешно обновлен'
     })
 

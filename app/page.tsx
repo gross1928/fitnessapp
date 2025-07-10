@@ -175,8 +175,8 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    // Проверяем авторизацию и онбординг пользователя
-    const checkUserStatus = async () => {
+    // Автоматическая регистрация/авторизация пользователя
+    const initializeUser = async () => {
       try {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           const tg = window.Telegram.WebApp
@@ -184,41 +184,61 @@ export default function DashboardPage() {
           
           const telegramUser = tg.initDataUnsafe?.user
           if (!telegramUser?.id) {
-            // Если нет данных Telegram, показываем заглушку
+            console.log('Нет данных Telegram пользователя')
             setLoading(false)
             return
           }
 
-          // Проверяем профиль пользователя
-          const response = await fetch('/api/users/profile', {
+          console.log('Инициализация пользователя:', telegramUser)
+
+          // Вызываем API автоматической регистрации
+          const registerResponse = await fetch('/api/users/register', {
+            method: 'POST',
             headers: {
+              'Content-Type': 'application/json',
               'x-telegram-user-id': telegramUser.id.toString()
-            }
+            },
+            body: JSON.stringify({
+              username: telegramUser.username,
+              first_name: telegramUser.first_name,
+              last_name: telegramUser.last_name,
+              language_code: telegramUser.language_code
+            })
           })
 
-          if (response.ok) {
-            const data = await response.json()
-            if (data.success && data.data.is_onboarded) {
-              setUser(data.data)
+          if (registerResponse.ok) {
+            const registerData = await registerResponse.json()
+            console.log('Результат регистрации:', registerData)
+            
+            if (registerData.success) {
+              if (registerData.needsOnboarding) {
+                console.log('Пользователю нужен онбординг')
+                router.push('/onboarding')
+                return
+              } else {
+                console.log('Пользователь полностью настроен, загружаем дашборд')
+                setUser(registerData.data)
+              }
             } else {
-              // Пользователь не прошел онбординг
-              router.push('/onboarding')
-              return
+              console.error('Ошибка регистрации:', registerData.error)
             }
           } else {
-            // Пользователь не найден, перенаправляем на онбординг
-            router.push('/onboarding')
-            return
+            const errorData = await registerResponse.json()
+            console.error('Ошибка запроса регистрации:', errorData)
           }
+        } else {
+          // Если нет Telegram WebApp, показываем заглушку
+          console.log('Приложение запущено вне Telegram')
+          setLoading(false)
         }
       } catch (error) {
-        console.error('Ошибка проверки пользователя:', error)
+        console.error('Ошибка инициализации пользователя:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    checkUserStatus()
+    initializeUser()
   }, [router])
 
   if (loading) {

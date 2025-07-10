@@ -73,6 +73,20 @@ export default function OnboardingPage() {
         return
       }
 
+      console.log('Отправляем данные онбординга:', {
+        telegram_id: telegramUser.id,
+        telegram_username: telegramUser.username,
+        name: data.name,
+        age: data.age,
+        height: data.height,
+        gender: data.gender,
+        current_weight: data.currentWeight,
+        target_weight: data.targetWeight,
+        goal_timeframe: data.timeframe,
+        activity_level: data.activityLevel,
+        goal: data.goal
+      })
+
       const response = await fetch('/api/users/onboarding', {
         method: 'POST',
         headers: {
@@ -94,10 +108,15 @@ export default function OnboardingPage() {
         })
       })
 
-      if (response.ok) {
+      const result = await response.json()
+      console.log('Результат онбординга:', result)
+
+      if (response.ok && result.success) {
+        console.log('Онбординг завершен успешно')
         router.push('/')
       } else {
-        alert('Ошибка сохранения данных')
+        console.error('Ошибка онбординга:', result.error)
+        alert('Ошибка сохранения данных: ' + (result.error || 'Неизвестная ошибка'))
       }
     } catch (error) {
       console.error('Ошибка:', error)

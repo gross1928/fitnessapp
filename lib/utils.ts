@@ -73,7 +73,7 @@ export function fileToBase64(file: File): Promise<string> {
 
 // Сжатие изображения
 export function compressImage(file: File, maxWidth: number = 800, quality: number = 0.8): Promise<Blob> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     const img = new Image()
@@ -88,7 +88,17 @@ export function compressImage(file: File, maxWidth: number = 800, quality: numbe
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height)
       
       // Конвертируем в blob
-      canvas.toBlob(resolve, 'image/jpeg', quality)
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob)
+        } else {
+          reject(new Error('Не удалось сжать изображение'))
+        }
+      }, 'image/jpeg', quality)
+    }
+    
+    img.onerror = () => {
+      reject(new Error('Не удалось загрузить изображение'))
     }
     
     img.src = URL.createObjectURL(file)

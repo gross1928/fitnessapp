@@ -172,61 +172,57 @@ export default function DashboardPage() {
 
     const initializeUser = async () => {
       try {
-        console.log('Начало инициализации пользователя')
-        console.log('window.Telegram:', typeof window !== 'undefined' ? !!window.Telegram : 'undefined')
-        console.log('window.Telegram?.WebApp:', typeof window !== 'undefined' && window.Telegram ? !!window.Telegram.WebApp : 'no telegram')
+        console.log('🚀 Начало инициализации пользователя')
+        console.log('🔍 window.Telegram:', typeof window !== 'undefined' ? !!window.Telegram : 'undefined')
+        console.log('🔍 window.Telegram?.WebApp:', typeof window !== 'undefined' && window.Telegram ? !!window.Telegram.WebApp : 'no telegram')
+        
+        // Пробуем получить данные из Telegram
+        let telegramUser = null
         
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           const tg = window.Telegram.WebApp
-          console.log('Telegram WebApp объект:', tg)
+          console.log('📱 Telegram WebApp объект найден:', tg)
           tg.ready()
           
-          console.log('initDataUnsafe:', tg.initDataUnsafe)
-          console.log('initData:', tg.initData)
+          console.log('📋 initDataUnsafe:', tg.initDataUnsafe)
+          console.log('📋 initData:', tg.initData)
           
-          const telegramUser = tg.initDataUnsafe?.user
-          console.log('Telegram user:', telegramUser)
+          telegramUser = tg.initDataUnsafe?.user
+          console.log('👤 Telegram user:', telegramUser)
+        }
+        
+        // Если нет данных пользователя из Telegram - используем тестовые данные
+        if (!telegramUser?.id) {
+          console.log('⚠️ Нет данных Telegram пользователя, используем тестовые данные')
           
-          if (!telegramUser?.id) {
-            console.log('Нет данных Telegram пользователя, пробуем другие методы')
-            console.log('tg.initDataUnsafe:', tg.initDataUnsafe)
-            
-            // Временный fallback для разработки
-            const mockUser = {
-              id: 6103273611,
-              username: 'grossvn',
-              first_name: 'Гросс',
-              last_name: '',
-              language_code: 'ru'
-            }
-            console.log('Используем тестового пользователя:', mockUser)
-            
-            // Используем mock данные для продолжения
-            await registerUser(mockUser)
-            return
-          }
-
-          console.log('Инициализация пользователя:', telegramUser)
-          await registerUser(telegramUser)
-        } else {
-          console.log('Telegram WebApp недоступен')
-          console.log('window:', typeof window)
-          console.log('window.Telegram:', typeof window !== 'undefined' ? window.Telegram : 'undefined')
-          
-          // Временный fallback для разработки
-          const mockUser = {
+          telegramUser = {
             id: 6103273611,
             username: 'grossvn',
             first_name: 'Гросс',
             last_name: '',
             language_code: 'ru'
           }
-          console.log('WebApp недоступен, используем тестового пользователя:', mockUser)
-          await registerUser(mockUser)
+          console.log('🧪 Используем тестового пользователя:', telegramUser)
+        } else {
+          console.log('✅ Используем реального Telegram пользователя:', telegramUser)
         }
+
+        // Регистрируем пользователя
+        await registerUser(telegramUser)
+        
       } catch (error) {
-        console.error('Ошибка инициализации пользователя:', error)
-        setLoading(false)
+        console.error('❌ Ошибка инициализации пользователя:', error)
+        
+        // В случае любой ошибки - тоже используем тестовые данные
+        const fallbackUser = {
+          id: 6103273611,
+          username: 'grossvn',
+          first_name: 'Гросс',
+          last_name: '',
+          language_code: 'ru'
+        }
+        console.log('🔧 Fallback: используем тестового пользователя:', fallbackUser)
+        await registerUser(fallbackUser)
       }
     }
 

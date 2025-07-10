@@ -46,7 +46,7 @@ export default function OnboardingPage() {
       if (tg.initDataUnsafe?.user?.first_name) {
         setData(prev => ({
           ...prev,
-          name: `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name || ''}`.trim()
+          name: `${tg.initDataUnsafe.user!.first_name} ${tg.initDataUnsafe.user!.last_name || ''}`.trim()
         }))
       }
     }

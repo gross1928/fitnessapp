@@ -151,10 +151,8 @@ export default function DashboardPage() {
   const handleUploadAnalysis = () => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy')
-      window.Telegram.WebApp.showAlert('Функция "Загрузить анализы" скоро будет доступна! 📋')
-    } else {
-      alert('Функция "Загрузить анализы" скоро будет доступна! 📋')
     }
+    router.push('/chat')
   }
 
   const handleGoals = () => {

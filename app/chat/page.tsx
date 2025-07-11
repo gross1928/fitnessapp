@@ -176,10 +176,34 @@ export default function ChatPage() {
   const handleCameraPhoto = () => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
-      window.Telegram.WebApp.showAlert('Функция камеры скоро будет доступна! 📸')
-    } else {
-      alert('Функция камеры скоро будет доступна! 📸')
     }
+    
+    // Создаем скрытый input для камеры
+    const cameraInput = document.createElement('input')
+    cameraInput.type = 'file'
+    cameraInput.accept = 'image/*'
+    cameraInput.capture = 'environment' // Использует заднюю камеру
+    cameraInput.style.display = 'none'
+    
+    cameraInput.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0]
+      if (file) {
+        setUploadingFile(true)
+        try {
+          await sendMessage('Сделано фото еды для анализа', 'food_photo', file)
+        } catch (error) {
+          console.error('Ошибка загрузки фото:', error)
+        } finally {
+          setUploadingFile(false)
+        }
+      }
+      // Удаляем элемент после использования
+      document.body.removeChild(cameraInput)
+    }
+    
+    // Добавляем в DOM и кликаем
+    document.body.appendChild(cameraInput)
+    cameraInput.click()
   }
 
   const formatTime = (dateString: string) => {
@@ -287,18 +311,29 @@ export default function ChatPage() {
 
       {/* Input Area */}
       <div className="bg-white border-t border-green-200/50 p-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* File Upload Button */}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingFile || loading}
-            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+            className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+            title="Загрузить файл"
           >
             {uploadingFile ? (
               <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
             ) : (
               <Paperclip className="w-4 h-4 text-gray-600" />
             )}
+          </button>
+
+          {/* Camera Button */}
+          <button
+            onClick={handleCameraPhoto}
+            disabled={loading || uploadingFile}
+            className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
+            title="Сфотографировать еду"
+          >
+            <Camera className="w-4 h-4 text-gray-600" />
           </button>
 
           {/* Text Input */}

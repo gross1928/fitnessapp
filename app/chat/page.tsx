@@ -321,7 +321,7 @@ export default function ChatPage() {
                   handleSendText()
                 }
               }}
-              placeholder="Напишите сообщение или загрузите файл..."
+              placeholder="Сообщение..."
               className="flex-1 px-4 py-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               rows={1}
               style={{ minHeight: '48px', maxHeight: '120px' }}
@@ -330,7 +330,7 @@ export default function ChatPage() {
             <button
               onClick={handleSendText}
               disabled={!inputText.trim() || loading}
-              className="p-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded-xl transition-colors disabled:cursor-not-allowed"
+              className="p-3.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-xl disabled:shadow-none"
             >
               <Send className="w-5 h-5" />
             </button>

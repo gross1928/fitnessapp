@@ -46,73 +46,47 @@ export async function POST(request: NextRequest) {
     // Получаем текущую дату
     const today = new Date().toISOString().split('T')[0]
 
-    // Проверяем есть ли уже запись за сегодня
-    const { data: existingEntry } = await supabase
-      .from('water_intake')
-      .select('*')
+    // Получаем все записи за сегодня
+    const { data: todayEntries } = await supabase
+      .from('water_entries')
+      .select('amount')
       .eq('user_id', user.id)
-      .eq('date', today)
+      .gte('created_at', `${today}T00:00:00.000Z`)
+      .lt('created_at', `${today}T23:59:59.999Z`)
+
+    // Вычисляем текущий объем за сегодня
+    const currentTotal = (todayEntries || []).reduce((sum: number, entry: any) => sum + entry.amount, 0)
+
+    // Создаем новую запись
+    const { data: newEntry, error } = await supabase
+      .from('water_entries')
+      .insert({
+        user_id: user.id,
+        amount: amount
+      })
+      .select()
       .single()
 
-    if (existingEntry) {
-      // Обновляем существующую запись
-      const { data: updatedEntry, error } = await supabase
-        .from('water_intake')
-        .update({
-          amount: existingEntry.amount + amount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingEntry.id)
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Ошибка обновления воды:', error)
-        return NextResponse.json(
-          { success: false, error: 'Ошибка сохранения данных' },
-          { status: 500 }
-        )
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          totalToday: updatedEntry.amount,
-          addedAmount: amount,
-          date: today
-        },
-        message: `Добавлено ${amount}мл воды`
-      })
-    } else {
-      // Создаем новую запись
-      const { data: newEntry, error } = await supabase
-        .from('water_intake')
-        .insert({
-          user_id: user.id,
-          amount: amount,
-          date: today
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Ошибка создания записи о воде:', error)
-        return NextResponse.json(
-          { success: false, error: 'Ошибка сохранения данных' },
-          { status: 500 }
-        )
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          totalToday: newEntry.amount,
-          addedAmount: amount,
-          date: today
-        },
-        message: `Добавлено ${amount}мл воды`
-      })
+    if (error) {
+      console.error('Ошибка создания записи о воде:', error)
+      return NextResponse.json(
+        { success: false, error: 'Ошибка сохранения данных' },
+        { status: 500 }
+      )
     }
+
+    // Новый общий объем
+    const newTotal = currentTotal + amount
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        totalToday: newTotal,
+        addedAmount: amount,
+        date: today
+      },
+      message: `Добавлено ${amount}мл воды`
+    })
 
   } catch (error) {
     console.error('Ошибка API воды:', error)
@@ -154,18 +128,21 @@ export async function GET(request: NextRequest) {
     // Получаем текущую дату
     const today = new Date().toISOString().split('T')[0]
 
-    // Получаем запись за сегодня
-    const { data: todayEntry } = await supabase
-      .from('water_intake')
-      .select('*')
+    // Получаем все записи за сегодня
+    const { data: todayEntries } = await supabase
+      .from('water_entries')
+      .select('amount')
       .eq('user_id', user.id)
-      .eq('date', today)
-      .single()
+      .gte('created_at', `${today}T00:00:00.000Z`)
+      .lt('created_at', `${today}T23:59:59.999Z`)
+
+    // Суммируем все записи за день
+    const totalToday = (todayEntries || []).reduce((sum: number, entry: any) => sum + entry.amount, 0)
 
     return NextResponse.json({
       success: true,
       data: {
-        totalToday: todayEntry?.amount || 0,
+        totalToday: totalToday,
         date: today,
         target: user.daily_water_target || 2000 // цель из профиля пользователя
       }

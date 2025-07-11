@@ -101,8 +101,17 @@ export async function analyzeFoodImage(imageBase64: string): Promise<OpenAIFoodA
       throw new Error('Не удалось получить ответ от AI')
     }
 
-    // Парсим JSON ответ
-    const analysis = JSON.parse(content) as OpenAIFoodAnalysis
+    // Парсим JSON ответ, убираем markdown форматирование если есть
+    let cleanContent = content.trim()
+    
+    // Убираем markdown code blocks если есть
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+    }
+    
+    const analysis = JSON.parse(cleanContent) as OpenAIFoodAnalysis
     return analysis
   } catch (error) {
     console.error('Ошибка при анализе еды:', error)
@@ -134,8 +143,17 @@ export async function analyzeFoodText(foodDescription: string): Promise<OpenAIFo
       throw new Error('Не удалось получить ответ от AI')
     }
 
-    // Парсим JSON ответ
-    const analysis = JSON.parse(content) as OpenAIFoodAnalysis
+    // Парсим JSON ответ, убираем markdown форматирование если есть
+    let cleanContent = content.trim()
+    
+    // Убираем markdown code blocks если есть
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+    }
+    
+    const analysis = JSON.parse(cleanContent) as OpenAIFoodAnalysis
     return analysis
   } catch (error) {
     console.error('Ошибка при анализе текста еды:', error)

@@ -44,27 +44,59 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (user) {
-        // Создаем или находим продукт в базе
-        const { data: existingFood } = await supabase
-          .from('food_items')
-          .select('id')
-          .eq('name', analysis.detected_food)
-          .eq('user_id', user.id)
-          .single()
-
-        if (!existingFood) {
-          // Создаем новый продукт
-          await supabase
+        try {
+          // Создаем или находим продукт в базе
+          let foodItemId: string
+          
+          const { data: existingFood } = await supabase
             .from('food_items')
-            .insert({
-              user_id: user.id,
-              name: analysis.detected_food,
-              calories_per_100g: analysis.estimated_calories,
-              proteins_per_100g: analysis.estimated_nutrition.proteins,
-              fats_per_100g: analysis.estimated_nutrition.fats,
-              carbs_per_100g: analysis.estimated_nutrition.carbs,
-              description: foodDescription
-            })
+            .select('id')
+            .eq('name', analysis.detected_food)
+            .eq('user_id', user.id)
+            .single()
+
+          if (existingFood) {
+            foodItemId = existingFood.id
+          } else {
+            // Создаем новый продукт
+            const { data: newFood, error: foodError } = await supabase
+              .from('food_items')
+              .insert({
+                user_id: user.id,
+                name: analysis.detected_food,
+                calories_per_100g: analysis.estimated_calories,
+                proteins_per_100g: analysis.estimated_nutrition.proteins,
+                fats_per_100g: analysis.estimated_nutrition.fats,
+                carbs_per_100g: analysis.estimated_nutrition.carbs
+              })
+              .select('id')
+              .single()
+
+            if (foodError || !newFood) {
+              console.error('Ошибка создания продукта:', foodError)
+            } else {
+              foodItemId = newFood.id
+              
+              // Создаем запись о приеме пищи (предполагаем 100г)
+              const amount = 100 // грамм
+              await supabase
+                .from('meal_entries')
+                .insert({
+                  user_id: user.id,
+                  food_item_id: foodItemId,
+                  meal_type: 'snack', // по умолчанию перекус
+                  amount: amount,
+                  calories: Math.round(analysis.estimated_calories * amount / 100),
+                  proteins: Math.round(analysis.estimated_nutrition.proteins * amount / 100),
+                  fats: Math.round(analysis.estimated_nutrition.fats * amount / 100),
+                  carbs: Math.round(analysis.estimated_nutrition.carbs * amount / 100),
+                  notes: `Анализ AI: ${foodDescription}`
+                })
+            }
+          }
+        } catch (dbError) {
+          console.error('Ошибка работы с базой данных:', dbError)
+          // Продолжаем выполнение, не блокируем анализ
         }
       }
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   Camera, 
@@ -30,28 +30,62 @@ export default function AddFoodPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [waterIntake, setWaterIntake] = useState(0)
   const [loading, setLoading] = useState<string | null>(null)
+  const [todayHistory, setTodayHistory] = useState<FoodEntry[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
 
-  // Моковые данные истории
-  const todayHistory: FoodEntry[] = [
-    {
-      id: '1',
-      name: 'Овсянка с бананом',
-      time: '08:30',
-      calories: 320,
-      protein: 12,
-      fat: 6,
-      carbs: 58
-    },
-    {
-      id: '2', 
-      name: 'Куриная грудка с рисом',
-      time: '13:15',
-      calories: 450,
-      protein: 35,
-      fat: 8,
-      carbs: 52
+  // Загрузка данных при монтировании компонента
+  useEffect(() => {
+    loadTodayHistory()
+    loadWaterIntake()
+  }, [])
+
+  const loadTodayHistory = async () => {
+    try {
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
+        window.Telegram.WebApp.initDataUnsafe?.user : null
+      
+      const response = await fetch('/api/nutrition/history', {
+        headers: {
+          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+        }
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setTodayHistory(result.data.entries)
+      } else {
+        console.error('Ошибка загрузки истории:', result.error)
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки истории:', error)
+    } finally {
+      setHistoryLoading(false)
     }
-  ]
+  }
+
+  const loadWaterIntake = async () => {
+    try {
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
+        window.Telegram.WebApp.initDataUnsafe?.user : null
+      
+      const response = await fetch('/api/nutrition/water', {
+        headers: {
+          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+        }
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setWaterIntake(result.data.totalToday)
+      } else {
+        console.error('Ошибка загрузки воды:', result.error)
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки воды:', error)
+    }
+  }
 
   const handleCameraPhoto = async () => {
     setLoading('camera')
@@ -161,6 +195,9 @@ export default function AddFoodPage() {
         } else {
           alert(message)
         }
+        
+        // Перезагружаем историю после успешного анализа
+        loadTodayHistory()
       } else {
         throw new Error(result.error)
       }
@@ -202,6 +239,7 @@ export default function AddFoodPage() {
       const result = await response.json()
 
       if (result.success) {
+        // Обновляем состояние воды
         setWaterIntake(result.data.totalToday)
         
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -336,7 +374,12 @@ export default function AddFoodPage() {
             История сегодня
           </h2>
           
-          {todayHistory.length > 0 ? (
+          {historyLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-3"></div>
+              <p className="text-sm text-gray-500">Загрузка истории...</p>
+            </div>
+          ) : todayHistory.length > 0 ? (
             <div className="space-y-3">
               {todayHistory.map((entry) => (
                 <div key={entry.id} className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200/50">

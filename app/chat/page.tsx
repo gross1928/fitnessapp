@@ -134,13 +134,14 @@ export default function ChatPage() {
       setMessages(prev => [...prev, errorMessage])
     } finally {
       setLoading(false)
-      setInputText('')
     }
   }
 
   const handleSendText = () => {
     if (inputText.trim()) {
-      sendMessage(inputText.trim(), 'text')
+      const messageText = inputText.trim()
+      setInputText('') // Очищаем поле ввода сразу
+      sendMessage(messageText, 'text')
     }
   }
 

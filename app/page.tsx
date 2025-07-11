@@ -84,22 +84,27 @@ function QuickActionButton({
   icon, 
   label, 
   onClick,
-  color = 'bg-white'
+  color = 'bg-gradient-to-br from-white to-gray-50',
+  textColor = 'text-gray-700'
 }: {
   icon: React.ReactNode
   label: string
   onClick: () => void
   color?: string
+  textColor?: string
 }) {
   return (
     <button
       onClick={onClick}
-      className={`${color} p-4 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border border-gray-100`}
+      className={`${color} p-5 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-100/50 group relative overflow-hidden`}
     >
-      <div className="text-gray-600 mb-2 flex justify-center">
-        {icon}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="relative z-10">
+        <div className={`${textColor} mb-3 flex justify-center group-hover:scale-110 transition-transform duration-300`}>
+          {icon}
+        </div>
+        <p className={`text-sm font-semibold ${textColor} text-center leading-tight`}>{label}</p>
       </div>
-      <p className="text-sm font-medium text-gray-800 text-center">{label}</p>
     </button>
   )
 }
@@ -118,8 +123,63 @@ export default function DashboardPage() {
     return () => clearInterval(timer)
   }, [])
 
+  // Функции для быстрых действий
+  const handleAddFood = () => {
+    // Telegram WebApp haptic feedback
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
+      window.Telegram.WebApp.showAlert('Функция "Добавить еду" скоро будет доступна! 🍎')
+    } else {
+      alert('Функция "Добавить еду" скоро будет доступна! 🍎')
+    }
+  }
+
+  const handleAddWater = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
+      window.Telegram.WebApp.showAlert('Функция "Выпить воды" скоро будет доступна! 💧')
+    } else {
+      alert('Функция "Выпить воды" скоро будет доступна! 💧')
+    }
+  }
+
+  const handleAddWeight = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
+      window.Telegram.WebApp.showAlert('Функция "Взвеситься" скоро будет доступна! ⚖️')
+    } else {
+      alert('Функция "Взвеситься" скоро будет доступна! ⚖️')
+    }
+  }
+
+  const handleUploadAnalysis = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy')
+      window.Telegram.WebApp.showAlert('Функция "Загрузить анализы" скоро будет доступна! 📋')
+    } else {
+      alert('Функция "Загрузить анализы" скоро будет доступна! 📋')
+    }
+  }
+
+  const handleGoals = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
+      router.push('/onboarding') // Пока перенаправляем на онбординг
+    } else {
+      router.push('/onboarding')
+    }
+  }
+
+  const handleHistory = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
+      window.Telegram.WebApp.showAlert('Функция "История" скоро будет доступна! 📅')
+    } else {
+      alert('Функция "История" скоро будет доступна! 📅')
+    }
+  }
+
   useEffect(() => {
-    // Автоматическая регистрация/авторизация пользователя
     const registerUser = async (telegramUser: any) => {
       try {
         console.log('📝 Регистрация пользователя:', telegramUser)
@@ -458,43 +518,55 @@ export default function DashboardPage() {
             Быстрые действия
           </h3>
           
-          <div className="grid grid-cols-3 gap-3">
-            <QuickActionButton
-              icon={<Apple className="w-6 h-6" />}
-              label="Добавить еду"
-              onClick={() => console.log('Add food')}
-            />
-            
-            <QuickActionButton
-              icon={<Droplets className="w-6 h-6" />}
-              label="Выпить воды"
-              onClick={() => console.log('Add water')}
-            />
-            
-            <QuickActionButton
-              icon={<Weight className="w-6 h-6" />}
-              label="Взвеситься"
-              onClick={() => console.log('Add weight')}
-            />
-            
-            <QuickActionButton
-              icon={<FileText className="w-6 h-6" />}
-              label="Загрузить анализы"
-              onClick={() => console.log('Upload analysis')}
-            />
-            
-            <QuickActionButton
-              icon={<Target className="w-6 h-6" />}
-              label="Мои цели"
-              onClick={() => console.log('Goals')}
-            />
-            
-            <QuickActionButton
-              icon={<Calendar className="w-6 h-6" />}
-              label="История"
-              onClick={() => console.log('History')}
-            />
-          </div>
+                      <div className="grid grid-cols-2 gap-4">
+              <QuickActionButton
+                icon={<Apple className="w-7 h-7" />}
+                label="Добавить еду"
+                onClick={handleAddFood}
+                color="bg-gradient-to-br from-orange-400 to-red-500"
+                textColor="text-white"
+              />
+              
+              <QuickActionButton
+                icon={<Droplets className="w-7 h-7" />}
+                label="Выпить воды"
+                onClick={handleAddWater}
+                color="bg-gradient-to-br from-blue-400 to-cyan-500"
+                textColor="text-white"
+              />
+              
+              <QuickActionButton
+                icon={<Weight className="w-7 h-7" />}
+                label="Взвеситься"
+                onClick={handleAddWeight}
+                color="bg-gradient-to-br from-green-400 to-emerald-500"
+                textColor="text-white"
+              />
+              
+              <QuickActionButton
+                icon={<FileText className="w-7 h-7" />}
+                label="Загрузить анализы"
+                onClick={handleUploadAnalysis}
+                color="bg-gradient-to-br from-purple-400 to-indigo-500"
+                textColor="text-white"
+              />
+              
+              <QuickActionButton
+                icon={<Target className="w-7 h-7" />}
+                label="Мои цели"
+                onClick={handleGoals}
+                color="bg-gradient-to-br from-pink-400 to-rose-500"
+                textColor="text-white"
+              />
+              
+              <QuickActionButton
+                icon={<Calendar className="w-7 h-7" />}
+                label="История"
+                onClick={handleHistory}
+                color="bg-gradient-to-br from-yellow-400 to-amber-500"
+                textColor="text-white"
+              />
+            </div>
         </div>
 
         {/* Progress Chart */}

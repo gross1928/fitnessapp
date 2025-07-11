@@ -216,7 +216,7 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-green-200/50 p-4 shadow-sm">
+      <div className="sticky top-0 z-10 bg-white border-b border-green-200/50 p-4 shadow-sm backdrop-blur-sm bg-white/95">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
@@ -356,7 +356,7 @@ export default function ChatPage() {
           <button
             onClick={handleSendText}
             disabled={!inputText.trim() || loading}
-            className="p-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg transition-colors disabled:cursor-not-allowed flex-shrink-0"
+            className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:bg-gray-300 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg transition-all duration-200 disabled:cursor-not-allowed flex-shrink-0 shadow-md hover:shadow-lg disabled:shadow-none"
           >
             <Send className="w-4 h-4" />
           </button>

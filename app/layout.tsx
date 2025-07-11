@@ -63,30 +63,9 @@ export default function RootLayout({
     <html lang="ru" suppressHydrationWarning>
       <head>
         <meta name="telegram-webapp" content="true" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Telegram WebApp initialization
-              if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-                
-                // Set theme colors
-                const isDark = window.Telegram.WebApp.colorScheme === 'dark';
-                document.documentElement.classList.toggle('dark', isDark);
-                
-                // Set CSS variables based on Telegram theme
-                const root = document.documentElement;
-                if (isDark) {
-                  root.style.setProperty('--tg-theme-bg-color', window.Telegram.WebApp.themeParams.bg_color || '#0f0f0f');
-                  root.style.setProperty('--tg-theme-text-color', window.Telegram.WebApp.themeParams.text_color || '#ffffff');
-                } else {
-                  root.style.setProperty('--tg-theme-bg-color', window.Telegram.WebApp.themeParams.bg_color || '#ffffff');
-                  root.style.setProperty('--tg-theme-text-color', window.Telegram.WebApp.themeParams.text_color || '#000000');
-                }
-              }
-            `,
-          }}
+        {/* Telegram WebApp script - moved to head for proper loading order */}
+        <script 
+          src="https://telegram.org/js/telegram-web-app.js"
         />
       </head>
       <body 
@@ -102,10 +81,67 @@ export default function RootLayout({
           </main>
         </div>
         
-        {/* Telegram WebApp script */}
-        <script 
-          src="https://telegram.org/js/telegram-web-app.js"
-          async
+        {/* Telegram WebApp initialization - moved to after script load */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Wait for script to load and initialize Telegram WebApp
+              function initTelegramWebApp() {
+                try {
+                  if (window.Telegram && window.Telegram.WebApp) {
+                    console.log('🚀 Initializing Telegram WebApp...');
+                    const tg = window.Telegram.WebApp;
+                    
+                    // Initialize WebApp
+                    tg.ready();
+                    tg.expand();
+                    
+                    // Set theme colors
+                    const isDark = tg.colorScheme === 'dark';
+                    document.documentElement.classList.toggle('dark', isDark);
+                    
+                    // Set CSS variables based on Telegram theme
+                    const root = document.documentElement;
+                    if (tg.themeParams) {
+                      if (isDark) {
+                        root.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#0f0f0f');
+                        root.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#ffffff');
+                      } else {
+                        root.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+                        root.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+                      }
+                    }
+                    
+                    console.log('✅ Telegram WebApp initialized successfully');
+                    console.log('📱 Platform:', tg.platform);
+                    console.log('🎨 Color scheme:', tg.colorScheme);
+                    console.log('📊 Viewport height:', tg.viewportHeight);
+                    console.log('📱 Version:', tg.version);
+                    console.log('👤 User data available:', !!tg.initDataUnsafe?.user);
+                    
+                    // Добавляем индикатор успешной инициализации в body
+                    document.body.setAttribute('data-telegram-webapp', 'initialized');
+                    
+                                     } else {
+                     console.log('⚠️ Telegram WebApp not available - running in fallback mode');
+                     // Добавляем индикатор fallback режима
+                     document.body.setAttribute('data-telegram-webapp', 'fallback');
+                   }
+                                 } catch (error) {
+                   console.error('❌ Error initializing Telegram WebApp:', error);
+                   // Добавляем индикатор ошибки
+                   document.body.setAttribute('data-telegram-webapp', 'error');
+                 }
+              }
+              
+              // Initialize when DOM is ready
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initTelegramWebApp);
+              } else {
+                initTelegramWebApp();
+              }
+            `,
+          }}
         />
         
         {/* PWA Service Worker registration */}

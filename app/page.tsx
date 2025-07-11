@@ -13,7 +13,8 @@ import {
   TrendingUp,
   Calendar,
   Target,
-  Activity
+  Activity,
+  AlertCircle
 } from 'lucide-react'
 
 
@@ -110,6 +111,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000)
@@ -120,7 +122,7 @@ export default function DashboardPage() {
     // Автоматическая регистрация/авторизация пользователя
     const registerUser = async (telegramUser: any) => {
       try {
-        console.log('Регистрация пользователя:', telegramUser)
+        console.log('📝 Регистрация пользователя:', telegramUser)
         
         // Вызываем API автоматической регистрации
         const registerResponse = await fetch('/api/users/register', {
@@ -139,32 +141,35 @@ export default function DashboardPage() {
 
         if (registerResponse.ok) {
           const registerData = await registerResponse.json()
-          console.log('Результат регистрации:', registerData)
+          console.log('✅ Результат регистрации:', registerData)
           
           if (registerData.success) {
-            console.log('Результат проверки:', {
+            console.log('🔍 Результат проверки:', {
               needsOnboarding: registerData.needsOnboarding,
               isNewUser: registerData.isNewUser,
               message: registerData.message
             })
             
             if (registerData.needsOnboarding) {
-              console.log('Пользователю нужен онбординг, перенаправляем...')
+              console.log('🚀 Пользователю нужен онбординг, перенаправляем...')
               router.push('/onboarding')
               return
             } else {
-              console.log('Пользователь полностью настроен, загружаем дашборд')
+              console.log('✨ Пользователь полностью настроен, загружаем дашборд')
               setUser(registerData.data)
             }
           } else {
-            console.error('Ошибка регистрации:', registerData.error)
+            console.error('❌ Ошибка регистрации:', registerData.error)
+            setError(`Ошибка регистрации: ${registerData.error}`)
           }
         } else {
           const errorData = await registerResponse.json()
-          console.error('Ошибка запроса регистрации:', errorData)
+          console.error('🔥 Ошибка запроса регистрации:', errorData)
+          setError(`Ошибка сервера: ${registerResponse.status} - ${errorData.error || 'Неизвестная ошибка'}`)
         }
       } catch (error) {
-        console.error('Ошибка регистрации пользователя:', error)
+        console.error('💥 Ошибка регистрации пользователя:', error)
+        setError(`Ошибка подключения: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
       } finally {
         setLoading(false)
       }
@@ -173,27 +178,52 @@ export default function DashboardPage() {
     const initializeUser = async () => {
       try {
         console.log('🚀 Начало инициализации пользователя')
-        console.log('🔍 window.Telegram:', typeof window !== 'undefined' ? !!window.Telegram : 'undefined')
-        console.log('🔍 window.Telegram?.WebApp:', typeof window !== 'undefined' && window.Telegram ? !!window.Telegram.WebApp : 'no telegram')
+        console.log('🔍 window:', typeof window !== 'undefined' ? 'доступен' : 'недоступен')
+        console.log('🔍 window.Telegram:', typeof window !== 'undefined' ? !!window.Telegram : 'не проверен')
         
-        // Пробуем получить данные из Telegram
+        // Проверяем доступность Telegram WebApp
         let telegramUser = null
+        let telegramDataSource = 'fallback'
         
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          const tg = window.Telegram.WebApp
-          console.log('📱 Telegram WebApp объект найден:', tg)
-          tg.ready()
+        if (typeof window !== 'undefined') {
+          // Ждем немного для загрузки Telegram WebApp скрипта
+          await new Promise(resolve => setTimeout(resolve, 100))
           
-          console.log('📋 initDataUnsafe:', tg.initDataUnsafe)
-          console.log('📋 initData:', tg.initData)
-          
-          telegramUser = tg.initDataUnsafe?.user
-          console.log('👤 Telegram user:', telegramUser)
+          if (window.Telegram?.WebApp) {
+            const tg = window.Telegram.WebApp
+            console.log('📱 Telegram WebApp найден:', {
+              platform: tg.platform,
+              version: tg.version,
+              colorScheme: tg.colorScheme,
+              isExpanded: tg.isExpanded,
+              viewportHeight: tg.viewportHeight
+            })
+            
+            // Инициализируем WebApp
+            tg.ready()
+            console.log('📋 initDataUnsafe:', tg.initDataUnsafe)
+            console.log('📋 initData length:', tg.initData?.length || 0)
+            
+            telegramUser = tg.initDataUnsafe?.user
+            if (telegramUser?.id) {
+              telegramDataSource = 'telegram'
+              console.log('👤 Реальный Telegram user найден:', telegramUser)
+            } else {
+              console.log('⚠️ initDataUnsafe.user пуст или недоступен')
+            }
+          } else {
+            console.log('⚠️ window.Telegram.WebApp недоступен')
+            if (window.Telegram) {
+              console.log('📱 window.Telegram существует, но WebApp:', window.Telegram.WebApp)
+            } else {
+              console.log('📱 window.Telegram не существует')
+            }
+          }
         }
         
         // Если нет данных пользователя из Telegram - используем тестовые данные
         if (!telegramUser?.id) {
-          console.log('⚠️ Нет данных Telegram пользователя, используем тестовые данные')
+          console.log('🧪 Используем тестовые данные пользователя')
           
           telegramUser = {
             id: 6103273611,
@@ -202,16 +232,20 @@ export default function DashboardPage() {
             last_name: '',
             language_code: 'ru'
           }
-          console.log('🧪 Используем тестового пользователя:', telegramUser)
-        } else {
-          console.log('✅ Используем реального Telegram пользователя:', telegramUser)
+          telegramDataSource = 'fallback'
         }
+
+        console.log('📊 Итоговые данные пользователя:', {
+          source: telegramDataSource,
+          user: telegramUser
+        })
 
         // Регистрируем пользователя
         await registerUser(telegramUser)
         
       } catch (error) {
-        console.error('❌ Ошибка инициализации пользователя:', error)
+        console.error('💥 Критическая ошибка инициализации:', error)
+        setError(`Критическая ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
         
         // В случае любой ошибки - тоже используем тестовые данные
         const fallbackUser = {
@@ -221,7 +255,7 @@ export default function DashboardPage() {
           last_name: '',
           language_code: 'ru'
         }
-        console.log('🔧 Fallback: используем тестового пользователя:', fallbackUser)
+        console.log('🔧 Fallback: используем тестового пользователя')
         await registerUser(fallbackUser)
       }
     }
@@ -235,6 +269,45 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Загрузка...</p>
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 max-w-md">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-semibold">Ошибка:</span>
+              </div>
+              <p className="mt-1 text-sm">{error}</p>
+              <p className="mt-2 text-xs text-red-600">
+                Проверьте консоль браузера для подробностей (F12)
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Если есть ошибка но загрузка завершена
+  if (error && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Ошибка загрузки</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Попробовать снова
+          </button>
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-left">
+            <p className="text-xs text-gray-500 mb-2">Отладочная информация:</p>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li>• URL: {window.location.href}</li>
+              <li>• User Agent: {navigator.userAgent.substring(0, 50)}...</li>
+              <li>• Telegram: {typeof window !== 'undefined' && window.Telegram ? 'Да' : 'Нет'}</li>
+            </ul>
+          </div>
         </div>
       </div>
     )
@@ -243,40 +316,48 @@ export default function DashboardPage() {
   const timeOfDay = currentTime.getHours() < 12 ? 'утром' : 
                    currentTime.getHours() < 18 ? 'днем' : 'вечером'
 
-  // Если пользователь есть, но нет целей по питанию - перенаправляем на онбординг
+  // Если у реального пользователя нет целей - перенаправляем на онбординг (fallback пользователю не нужен онбординг)
   if (user && (!user.daily_calorie_target || !user.goal_type)) {
-    console.log('У пользователя нет целей по питанию, нужен онбординг')
+    console.log('🎯 У пользователя нет целей по питанию, нужен онбординг')
     router.push('/onboarding')
     return null
   }
 
-  // Если нет пользователя, показываем заглушку
-  if (!user) {
+  // Если нет пользователя, но нет ошибки - показываем загрузку
+  if (!user && !error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">ДаЕда</h1>
-          <p className="text-gray-600 mb-6">
-            Пожалуйста, запустите приложение через Telegram
-          </p>
-          <div className="p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
-            <p className="text-sm text-gray-500">
-              Это приложение работает только как Telegram WebApp
-            </p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Инициализация пользователя...</p>
         </div>
       </div>
     )
   }
 
-  // Используем данные пользователя вместо моков
+  // Если нет пользователя и есть ошибка - используем fallback данные
+  const fallbackUser = !user ? {
+    id: 6103273611,
+    name: 'Тестовый пользователь',
+    username: 'test_user',
+    daily_calorie_target: 2000,
+    daily_protein_target: 100,
+    daily_fat_target: 60,
+    daily_carb_target: 200,
+    daily_water_target: 2000,
+    current_weight: 70,
+    goal_type: 'maintain'
+  } : user
+
+  // Используем данные пользователя или fallback
+  const activeUser = fallbackUser
   const todayData = {
-    calories: { current: 0, target: user.daily_calorie_target || 2000 },
-    proteins: { current: 0, target: user.daily_protein_target || 100 },
-    fats: { current: 0, target: user.daily_fat_target || 60 },
-    carbs: { current: 0, target: user.daily_carb_target || 200 },
-    water: { current: 0, target: user.daily_water_target || 2000 },
-    weight: user.current_weight || 0,
+    calories: { current: 0, target: activeUser.daily_calorie_target || 2000 },
+    proteins: { current: 0, target: activeUser.daily_protein_target || 100 },
+    fats: { current: 0, target: activeUser.daily_fat_target || 60 },
+    carbs: { current: 0, target: activeUser.daily_carb_target || 200 },
+    water: { current: 0, target: activeUser.daily_water_target || 2000 },
+    weight: activeUser.current_weight || 0,
     steps: 0
   }
   
@@ -289,10 +370,15 @@ export default function DashboardPage() {
             ДаЕда
           </h1>
           <p className="text-gray-600">
-            Добро пожаловать, {user?.name || 'Пользователь'}! 
+            Добро пожаловать, {activeUser?.name || 'Пользователь'}! 
             <br />
             Хорошего дня {timeOfDay} 👋
           </p>
+          {!user && (
+            <div className="mt-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+              <span className="font-medium">Демо режим:</span> Используются тестовые данные
+            </div>
+          )}
         </div>
 
         {/* Quick Stats */}

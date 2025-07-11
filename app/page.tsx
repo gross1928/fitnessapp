@@ -116,6 +116,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [waterIntake, setWaterIntake] = useState(0)
   
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000)
@@ -134,10 +135,8 @@ export default function DashboardPage() {
   const handleAddWater = () => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
-      window.Telegram.WebApp.showAlert('Функция "Выпить воды" скоро будет доступна! 💧')
-    } else {
-      alert('Функция "Выпить воды" скоро будет доступна! 💧')
     }
+    router.push('/nutrition/add')
   }
 
   const handleAddWeight = () => {
@@ -320,6 +319,36 @@ export default function DashboardPage() {
     initializeUser()
   }, [router])
 
+  // Загружаем данные о воде когда пользователь загружен
+  useEffect(() => {
+    const loadWaterData = async () => {
+      if (!user?.id) return
+
+      try {
+        // Используем тестовый ID если это fallback пользователь
+        const telegramId = user.telegram_id || 6103273611
+        
+        const response = await fetch('/api/nutrition/water', {
+          headers: {
+            'x-telegram-user-id': telegramId.toString()
+          }
+        })
+
+        const result = await response.json()
+
+        if (result.success) {
+          setWaterIntake(result.data.totalToday)
+        } else {
+          console.error('Ошибка загрузки данных о воде:', result.error)
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки данных о воде:', error)
+      }
+    }
+
+    loadWaterData()
+  }, [user])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 flex items-center justify-center">
@@ -413,7 +442,7 @@ export default function DashboardPage() {
     proteins: { current: 0, target: activeUser.daily_protein_target || 100 },
     fats: { current: 0, target: activeUser.daily_fat_target || 60 },
     carbs: { current: 0, target: activeUser.daily_carb_target || 200 },
-    water: { current: 0, target: activeUser.daily_water_target || 2000 },
+    water: { current: waterIntake, target: activeUser.daily_water_target || 2000 },
     weight: activeUser.current_weight || 0,
     steps: 0
   }

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createServiceRoleClient } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
     const { amount } = await request.json()
     const telegramId = request.headers.get('x-telegram-user-id')
     
+    console.log('💧 Water API - received request:', { amount, telegramId })
+    
     if (!telegramId) {
+      console.log('❌ No telegram ID provided')
       return NextResponse.json(
         { success: false, error: 'Требуется авторизация' },
         { status: 401 }
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServiceRoleClient()
     
     // Получаем пользователя
     const { data: user } = await supabase
@@ -109,7 +112,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    const supabase = createServiceRoleClient()
     
     // Получаем пользователя
     const { data: user } = await supabase

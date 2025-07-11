@@ -242,15 +242,9 @@ export default function AddFoodPage() {
         // Обновляем состояние воды
         setWaterIntake(result.data.totalToday)
         
+        // Только haptic feedback, без уведомлений
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
-          window.Telegram.WebApp.showPopup({
-            title: '💧 Вода добавлена!',
-            message: `+${amount}мл воды. Всего сегодня: ${result.data.totalToday}мл`,
-            buttons: [{ type: 'ok', text: 'OK' }]
-          })
-        } else {
-          alert(`+${amount}мл воды добавлено! Всего: ${result.data.totalToday}мл`)
         }
       } else {
         throw new Error(result.error)
@@ -258,14 +252,11 @@ export default function AddFoodPage() {
     } catch (error) {
       console.error('Ошибка добавления воды:', error)
       
-      // Fallback: обновляем локально
+      // Fallback: обновляем локально без уведомлений
       setWaterIntake(prev => prev + amount)
       
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
-        window.Telegram.WebApp.showAlert(`Добавлено ${amount}мл воды (локально)`)
-      } else {
-        alert(`Добавлено ${amount}мл воды (локально)`)
       }
     }
   }

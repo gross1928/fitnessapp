@@ -422,23 +422,33 @@ export default function DashboardPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 p-4">
       <div className="max-w-lg mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center pt-4 pb-2">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            ДаЕда
-          </h1>
-          <p className="text-gray-600">
-            Добро пожаловать, {activeUser?.name || 'Пользователь'}! 
-            <br />
-            Хорошего дня {timeOfDay} 👋
-          </p>
-          {!user && (
-            <div className="mt-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
-              <span className="font-medium">Демо режим:</span> Используются тестовые данные
-            </div>
-          )}
+        <div className="text-center pt-6 pb-4 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-2xl border border-purple-400/30 relative overflow-hidden">
+          {/* Светящийся фон */}
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-purple-500/20 to-blue-600/10" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]" />
+          
+          <div className="relative z-10">
+            <h1 className="text-4xl font-black mb-3 bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-2xl" 
+                style={{
+                  textShadow: '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.4)',
+                  filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.9))'
+                }}>
+              ДаЕда
+            </h1>
+            <p className="text-blue-100 text-lg font-medium leading-relaxed">
+              Добро пожаловать, <span className="text-yellow-300 font-bold">{activeUser?.name || 'Пользователь'}</span>! 
+              <br />
+              <span className="text-purple-200">Хорошего дня {timeOfDay} 👋</span>
+            </p>
+            {!user && (
+              <div className="mt-4 px-4 py-2 bg-amber-400/20 border border-amber-300/40 rounded-xl text-amber-200 text-sm backdrop-blur-sm">
+                <span className="font-bold text-amber-300">Демо режим:</span> Используются тестовые данные
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -449,7 +459,7 @@ export default function DashboardPage() {
             target={todayData.calories.target}
             unit="ккал"
             icon={<Apple className="w-6 h-6" />}
-            color="gradient-orange"
+            color="bg-gradient-to-br from-orange-500 to-red-600 shadow-orange-500/30"
           />
           
           <MetricCard
@@ -458,7 +468,7 @@ export default function DashboardPage() {
             target={todayData.water.target}
             unit="мл"
             icon={<Droplets className="w-6 h-6" />}
-            color="gradient-blue"
+            color="bg-gradient-to-br from-blue-500 to-cyan-600 shadow-blue-500/30"
           />
         </div>
 
@@ -469,8 +479,8 @@ export default function DashboardPage() {
             value={todayData.proteins.current}
             target={todayData.proteins.target}
             unit="г"
-            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-orange-500 font-bold">Б</div>}
-            color="bg-orange-400"
+            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">Б</div>}
+            color="bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-400/30"
           />
           
           <MetricCard
@@ -478,8 +488,8 @@ export default function DashboardPage() {
             value={todayData.fats.current}
             target={todayData.fats.target}
             unit="г"
-            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-yellow-500 font-bold">Ж</div>}
-            color="bg-yellow-400"
+            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-yellow-600 font-bold text-sm">Ж</div>}
+            color="bg-gradient-to-br from-yellow-400 to-amber-500 shadow-yellow-400/30"
           />
           
           <MetricCard
@@ -487,8 +497,8 @@ export default function DashboardPage() {
             value={todayData.carbs.current}
             target={todayData.carbs.target}
             unit="г"
-            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-green-500 font-bold">У</div>}
-            color="bg-green-400"
+            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-green-600 font-bold text-sm">У</div>}
+            color="bg-gradient-to-br from-green-400 to-emerald-600 shadow-green-400/30"
           />
         </div>
 
@@ -499,7 +509,7 @@ export default function DashboardPage() {
             value={todayData.weight}
             unit="кг"
             icon={<Weight className="w-6 h-6" />}
-            color="gradient-green"
+            color="bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30"
           />
           
           <MetricCard
@@ -507,16 +517,18 @@ export default function DashboardPage() {
             value={todayData.steps}
             unit="шагов"
             icon={<Activity className="w-6 h-6" />}
-            color="gradient-purple"
+            color="bg-gradient-to-br from-purple-500 to-indigo-600 shadow-purple-500/30"
           />
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Plus className="w-5 h-5 mr-2 text-primary" />
-            Быстрые действия
-          </h3>
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-700/50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5" />
+          <div className="relative z-10">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Plus className="w-5 h-5 mr-2 text-yellow-400" />
+              Быстрые действия
+            </h3>
           
                       <div className="grid grid-cols-2 gap-4">
               <QuickActionButton
@@ -567,39 +579,46 @@ export default function DashboardPage() {
                 textColor="text-white"
               />
             </div>
+          </div>
         </div>
 
         {/* Progress Chart */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-primary" />
-            Прогресс за неделю
-          </h3>
-          
-          <div className="text-center py-8">
-            <div className="text-gray-400 mb-4">
-              <TrendingUp className="w-12 h-12 mx-auto" />
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-700/50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-blue-500/5" />
+          <div className="relative z-10">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
+              Прогресс за неделю
+            </h3>
+            
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-4">
+                <TrendingUp className="w-12 h-12 mx-auto" />
+              </div>
+              <p className="text-gray-300 text-sm">
+                Начните отслеживать питание и вес,<br />
+                чтобы увидеть свой прогресс
+              </p>
             </div>
-            <p className="text-gray-500 text-sm">
-              Начните отслеживать питание и вес,<br />
-              чтобы увидеть свой прогресс
-            </p>
           </div>
         </div>
 
         {/* AI Coach suggestion */}
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex items-start space-x-3">
-            <div className="p-2 bg-white/20 rounded-xl flex-shrink-0">
-              <Heart className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Совет от ДаЕда</h4>
-              <p className="text-sm opacity-90 leading-relaxed">
-                Отличная работа! Вы почти достигли цели по калориям сегодня. 
-                Рекомендую добавить немного белка в следующий прием пищи. 
-                Попробуйте греческий йогурт с орехами! 🥜
-              </p>
+        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden border border-purple-400/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-transparent" />
+          <div className="relative z-10">
+            <div className="flex items-start space-x-3">
+              <div className="p-3 bg-gradient-to-br from-yellow-400/30 to-amber-500/30 rounded-xl flex-shrink-0 backdrop-blur-sm border border-yellow-400/20">
+                <Heart className="w-6 h-6 text-yellow-300" />
+              </div>
+              <div>
+                <h4 className="font-bold mb-2 text-yellow-200">Совет от ДаЕда</h4>
+                <p className="text-sm text-blue-100 leading-relaxed">
+                  Отличная работа! Вы почти достигли цели по калориям сегодня. 
+                  Рекомендую добавить немного белка в следующий прием пищи. 
+                  Попробуйте греческий йогурт с орехами! 🥜
+                </p>
+              </div>
             </div>
           </div>
         </div>

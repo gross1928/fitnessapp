@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Получаем последние 50 сообщений
+    console.log('📥 Загружаем сообщения для пользователя:', user.id)
+    
     const { data: messages, error } = await supabase
       .from('chat_messages')
       .select('*')
@@ -39,12 +41,15 @@ export async function GET(request: NextRequest) {
       .limit(50)
 
     if (error) {
-      console.error('Ошибка загрузки сообщений:', error)
+      console.error('❌ Ошибка загрузки сообщений:', error)
       return NextResponse.json(
         { success: false, error: 'Ошибка загрузки сообщений' },
         { status: 500 }
       )
     }
+
+    console.log('📨 Загружено сообщений:', messages?.length || 0)
+    console.log('📝 Роли сообщений:', messages?.map(m => `${m.role}: ${m.content.substring(0, 50)}...`) || [])
 
     return NextResponse.json({
       success: true,
@@ -122,6 +127,8 @@ export async function POST(request: NextRequest) {
       } : null
     }
 
+    console.log('💾 Сохраняем сообщение пользователя:', userMessageData)
+    
     const { data: userMessage, error: userMessageError } = await supabase
       .from('chat_messages')
       .insert(userMessageData)
@@ -129,12 +136,15 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (userMessageError) {
-      console.error('Ошибка сохранения сообщения пользователя:', userMessageError)
+      console.error('❌ Ошибка сохранения сообщения пользователя:', userMessageError)
+      console.error('❌ Данные сообщения:', userMessageData)
       return NextResponse.json(
         { success: false, error: 'Ошибка сохранения сообщения' },
         { status: 500 }
       )
     }
+
+    console.log('✅ Сообщение пользователя сохранено:', userMessage)
 
     // Обрабатываем файл и генерируем ответ ИИ
     let aiResponse = ''
@@ -344,6 +354,8 @@ ${healthAnalysis.follow_up_suggestions?.map(s => `• ${s}`).join('\n') || '• 
       metadata
     }
 
+    console.log('🤖 Сохраняем ответ ассистента:', assistantMessageData.content.substring(0, 100) + '...')
+
     const { data: assistantMessage, error: assistantMessageError } = await supabase
       .from('chat_messages')
       .insert(assistantMessageData)
@@ -351,8 +363,10 @@ ${healthAnalysis.follow_up_suggestions?.map(s => `• ${s}`).join('\n') || '• 
       .single()
 
     if (assistantMessageError) {
-      console.error('Ошибка сохранения ответа ассистента:', assistantMessageError)
+      console.error('❌ Ошибка сохранения ответа ассистента:', assistantMessageError)
       // Не возвращаем ошибку, так как пользователь уже отправил сообщение
+    } else {
+      console.log('✅ Ответ ассистента сохранен:', assistantMessage?.id)
     }
 
     return NextResponse.json({

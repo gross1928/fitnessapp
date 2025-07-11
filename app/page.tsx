@@ -127,10 +127,8 @@ export default function DashboardPage() {
     // Telegram WebApp haptic feedback
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
-      window.Telegram.WebApp.showAlert('Функция "Добавить еду" скоро будет доступна! 🍎')
-    } else {
-      alert('Функция "Добавить еду" скоро будет доступна! 🍎')
     }
+    router.push('/nutrition/add')
   }
 
   const handleAddWater = () => {

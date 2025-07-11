@@ -110,6 +110,39 @@ export async function analyzeFoodImage(imageBase64: string): Promise<OpenAIFoodA
   }
 }
 
+// Анализ текстового описания еды
+export async function analyzeFoodText(foodDescription: string): Promise<OpenAIFoodAnalysis> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // Используем более дешевую модель для текста
+      messages: [
+        {
+          role: "system",
+          content: FOOD_ANALYSIS_PROMPT
+        },
+        {
+          role: "user",
+          content: `Проанализируй это описание приема пищи и определи калории и БЖУ: "${foodDescription}"`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.3,
+    })
+
+    const content = response.choices[0]?.message?.content
+    if (!content) {
+      throw new Error('Не удалось получить ответ от AI')
+    }
+
+    // Парсим JSON ответ
+    const analysis = JSON.parse(content) as OpenAIFoodAnalysis
+    return analysis
+  } catch (error) {
+    console.error('Ошибка при анализе текста еды:', error)
+    throw new Error('Не удалось проанализировать описание еды')
+  }
+}
+
 // Анализ медицинских данных
 export async function analyzeHealthData(
   data: string, 

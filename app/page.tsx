@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-  Heart, 
   Droplets, 
   Apple, 
   Weight, 
@@ -582,46 +581,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Progress Chart */}
-        <div className="bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-2xl border border-green-200/50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5" />
-          <div className="relative z-10">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
-              Прогресс за неделю
-            </h3>
-            
-            <div className="text-center py-8">
-              <div className="text-gray-500 mb-4">
-                <TrendingUp className="w-12 h-12 mx-auto" />
-              </div>
-              <p className="text-gray-600 text-sm">
-                Начните отслеживать питание и вес,<br />
-                чтобы увидеть свой прогресс
-              </p>
-            </div>
-          </div>
-        </div>
 
-        {/* AI Coach suggestion */}
-        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden border border-green-400/30">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-transparent" />
-          <div className="relative z-10">
-            <div className="flex items-start space-x-3">
-              <div className="p-3 bg-gradient-to-br from-yellow-400/30 to-amber-500/30 rounded-xl flex-shrink-0 backdrop-blur-sm border border-yellow-400/20">
-                <Heart className="w-6 h-6 text-yellow-300" />
-              </div>
-              <div>
-                <h4 className="font-bold mb-2 text-yellow-200">Совет от ДаЕда</h4>
-                <p className="text-sm text-green-100 leading-relaxed">
-                  Отличная работа! Вы почти достигли цели по калориям сегодня. 
-                  Рекомендую добавить немного белка в следующий прием пищи. 
-                  Попробуйте греческий йогурт с орехами! 🥜
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+
+
 
         {/* Bottom padding for safe area */}
         <div className="h-8" />

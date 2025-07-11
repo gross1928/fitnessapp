@@ -44,7 +44,7 @@ SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
 FROM pg_policies 
 WHERE tablename = 'users';
 
--- 6. Показываем информацию о RLS статусе
-SELECT schemaname, tablename, rowsecurity, forcerowsecurity 
+-- 6. Показываем информацию о RLS статусе (исправлено - убрана несуществующая колонка)
+SELECT schemaname, tablename, rowsecurity 
 FROM pg_tables 
 WHERE tablename = 'users'; 

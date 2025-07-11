@@ -225,15 +225,110 @@ ${healthAnalysis.follow_up_suggestions?.map(s => `• ${s}`).join('\n') || '• 
         // Добавляем текущее сообщение в историю
         chatHistory.push({ role: 'user', content })
 
-        const userContext = {
+        // Собираем ПОЛНЫЙ контекст пользователя
+        const today = new Date().toISOString().split('T')[0]
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+        // Питание за сегодня
+        const { data: todayMeals } = await supabase
+          .from('meal_entries')
+          .select(`
+            meal_type,
+            amount,
+            calories,
+            proteins,
+            fats,
+            carbs,
+            created_at,
+            food_items!inner(name)
+          `)
+          .eq('user_id', user.id)
+          .gte('created_at', `${today}T00:00:00.000Z`)
+          .lt('created_at', `${today}T23:59:59.999Z`)
+
+        // Вода за сегодня
+        const { data: todayWater } = await supabase
+          .from('water_entries')
+          .select('amount')
+          .eq('user_id', user.id)
+          .gte('created_at', `${today}T00:00:00.000Z`)
+          .lt('created_at', `${today}T23:59:59.999Z`)
+
+        // Недавние анализы здоровья
+        const { data: recentAnalyses } = await supabase
+          .from('health_analyses')
+          .select('analysis_type, key_findings, recommendations, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3)
+
+        // Записи веса за последнюю неделю
+        const { data: recentWeight } = await supabase
+          .from('weight_entries')
+          .select('weight, created_at')
+          .eq('user_id', user.id)
+          .gte('created_at', `${weekAgo}T00:00:00.000Z`)
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        // Подсчитываем дневные показатели
+        const todayTotalCalories = (todayMeals || []).reduce((sum, meal) => sum + meal.calories, 0)
+        const todayTotalProteins = (todayMeals || []).reduce((sum, meal) => sum + meal.proteins, 0)
+        const todayTotalFats = (todayMeals || []).reduce((sum, meal) => sum + meal.fats, 0)
+        const todayTotalCarbs = (todayMeals || []).reduce((sum, meal) => sum + meal.carbs, 0)
+        const todayTotalWater = (todayWater || []).reduce((sum, entry) => sum + entry.amount, 0)
+
+        const fullUserContext = {
+          // Базовая информация
           name: user.name,
           age: user.age,
+          height: user.height,
           goals: user.goal_type,
           currentWeight: user.current_weight,
-          targetWeight: user.target_weight
+          targetWeight: user.target_weight,
+          activityLevel: user.activity_level,
+          
+          // Цели по питанию
+          dailyCalorieTarget: user.daily_calorie_target,
+          dailyProteinTarget: user.daily_protein_target,
+          dailyFatTarget: user.daily_fat_target,
+          dailyCarbTarget: user.daily_carb_target,
+          dailyWaterTarget: user.daily_water_target,
+          
+          // Показатели за сегодня
+          todayNutrition: {
+            calories: todayTotalCalories,
+            proteins: Math.round(todayTotalProteins * 10) / 10,
+            fats: Math.round(todayTotalFats * 10) / 10,
+            carbs: Math.round(todayTotalCarbs * 10) / 10,
+            water: todayTotalWater,
+            mealsCount: (todayMeals || []).length
+          },
+          
+          // Что ел сегодня
+          todayMeals: (todayMeals || []).map(meal => ({
+            food: (meal as any).food_items?.name || 'Неизвестно',
+            mealType: meal.meal_type,
+            amount: meal.amount,
+            calories: meal.calories,
+            time: new Date(meal.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+          })),
+          
+          // Недавние анализы
+          recentHealthAnalyses: (recentAnalyses || []).map(analysis => ({
+            type: analysis.analysis_type,
+            keyFindings: analysis.key_findings?.slice(0, 2) || [], // только ключевые находки
+            date: new Date(analysis.created_at).toLocaleDateString('ru-RU')
+          })),
+          
+          // Изменения веса
+          weightProgress: (recentWeight || []).map(entry => ({
+            weight: entry.weight,
+            date: new Date(entry.created_at).toLocaleDateString('ru-RU')
+          }))
         }
 
-        aiResponse = await getChatResponse(chatHistory, userContext)
+        aiResponse = await getChatResponse(chatHistory, fullUserContext)
       }
     } catch (error) {
       console.error('Ошибка обработки ИИ:', error)

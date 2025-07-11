@@ -202,20 +202,99 @@ export async function getChatResponse(
   userContext?: {
     name?: string
     age?: number
+    height?: number
     goals?: string
     currentWeight?: number
     targetWeight?: number
+    activityLevel?: string
+    dailyCalorieTarget?: number
+    dailyProteinTarget?: number
+    dailyFatTarget?: number
+    dailyCarbTarget?: number
+    dailyWaterTarget?: number
+    todayNutrition?: {
+      calories: number
+      proteins: number
+      fats: number
+      carbs: number
+      water: number
+      mealsCount: number
+    }
+    todayMeals?: Array<{
+      food: string
+      mealType: string
+      amount: number
+      calories: number
+      time: string
+    }>
+    recentHealthAnalyses?: Array<{
+      type: string
+      keyFindings: string[]
+      date: string
+    }>
+    weightProgress?: Array<{
+      weight: number
+      date: string
+    }>
   }
 ): Promise<string> {
   try {
-    const contextPrompt = userContext ? `
-Контекст пользователя:
+    let contextPrompt = ''
+    
+    if (userContext) {
+      contextPrompt = `
+ПОЛНЫЙ КОНТЕКСТ ПОЛЬЗОВАТЕЛЯ:
+
+🧑‍💼 ЛИЧНЫЕ ДАННЫЕ:
 - Имя: ${userContext.name || 'Не указано'}
-- Возраст: ${userContext.age || 'Не указан'}
+- Возраст: ${userContext.age || 'Не указан'} лет
+- Рост: ${userContext.height || 'Не указан'} см
 - Текущий вес: ${userContext.currentWeight || 'Не указан'} кг
 - Целевой вес: ${userContext.targetWeight || 'Не указан'} кг
-- Цели: ${userContext.goals || 'Не указаны'}
-` : ''
+- Цель: ${userContext.goals || 'Не указана'}
+- Уровень активности: ${userContext.activityLevel || 'Не указан'}
+
+🎯 ДНЕВНЫЕ ЦЕЛИ ПО ПИТАНИЮ:
+- Калории: ${userContext.dailyCalorieTarget || 'Не установлено'} ккал
+- Белки: ${userContext.dailyProteinTarget || 'Не установлено'} г
+- Жиры: ${userContext.dailyFatTarget || 'Не установлено'} г
+- Углеводы: ${userContext.dailyCarbTarget || 'Не установлено'} г
+- Вода: ${userContext.dailyWaterTarget || 'Не установлено'} мл
+
+📊 ПОКАЗАТЕЛИ СЕГОДНЯ:
+${userContext.todayNutrition ? `
+- Потреблено калорий: ${userContext.todayNutrition.calories}/${userContext.dailyCalorieTarget || '?'} ккал (${userContext.dailyCalorieTarget ? Math.round((userContext.todayNutrition.calories / userContext.dailyCalorieTarget) * 100) : '?'}%)
+- Белки: ${userContext.todayNutrition.proteins}/${userContext.dailyProteinTarget || '?'} г
+- Жиры: ${userContext.todayNutrition.fats}/${userContext.dailyFatTarget || '?'} г  
+- Углеводы: ${userContext.todayNutrition.carbs}/${userContext.dailyCarbTarget || '?'} г
+- Вода: ${userContext.todayNutrition.water}/${userContext.dailyWaterTarget || '?'} мл
+- Приемов пищи: ${userContext.todayNutrition.mealsCount}
+` : 'Данные за сегодня не загружены'}
+
+🍽️ ЧТО ЕЛ СЕГОДНЯ:
+${userContext.todayMeals && userContext.todayMeals.length > 0 ? 
+  userContext.todayMeals.map(meal => 
+    `- ${meal.time}: ${meal.food} (${meal.mealType}) - ${meal.amount}г, ${meal.calories} ккал`
+  ).join('\n') 
+  : 'Еще ничего не ел сегодня'}
+
+📋 НЕДАВНИЕ АНАЛИЗЫ ЗДОРОВЬЯ:
+${userContext.recentHealthAnalyses && userContext.recentHealthAnalyses.length > 0 ?
+  userContext.recentHealthAnalyses.map(analysis => 
+    `- ${analysis.date}: ${analysis.type} - ${analysis.keyFindings.join(', ')}`
+  ).join('\n')
+  : 'Анализы не загружены'}
+
+⚖️ ИЗМЕНЕНИЯ ВЕСА:
+${userContext.weightProgress && userContext.weightProgress.length > 0 ?
+  userContext.weightProgress.map(entry => 
+    `- ${entry.date}: ${entry.weight} кг`
+  ).join('\n')
+  : 'Данные о весе отсутствуют'}
+
+ВАЖНО: Используй ВСЮ эту информацию для персонализации ответов! Комментируй прогресс, давай советы на основе текущего потребления, анализируй соответствие целям.
+`
+    }
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini", // Заменено с gpt-4 на более дешевую модель

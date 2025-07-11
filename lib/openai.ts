@@ -69,7 +69,7 @@ const AI_COACH_PROMPT = `
 export async function analyzeFoodImage(imageBase64: string): Promise<OpenAIFoodAnalysis> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4o", // Заменено с gpt-4-vision-preview на более дешевую модель
       messages: [
         {
           role: "system",
@@ -117,7 +117,7 @@ export async function analyzeHealthData(
 ): Promise<OpenAIHealthAnalysis> {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini", // Заменено с gpt-4 на более дешевую модель
       messages: [
         {
           role: "system",
@@ -167,7 +167,7 @@ export async function getChatResponse(
 ` : ''
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini", // Заменено с gpt-4 на более дешевую модель
       messages: [
         {
           role: "system",
@@ -238,7 +238,7 @@ ${userProfile.allergies?.length ? `Аллергии: ${userProfile.allergies.joi
 `
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini", // Заменено с gpt-4 на более дешевую модель
       messages: [
         {
           role: "system",

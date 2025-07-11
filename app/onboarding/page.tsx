@@ -137,7 +137,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 p-4">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-8 pt-8">
@@ -159,9 +159,9 @@ export default function OnboardingPage() {
               {Math.round((step / totalSteps) * 100)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-green-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / totalSteps) * 100}%` }}
             />
           </div>
@@ -172,7 +172,7 @@ export default function OnboardingPage() {
           {step === 1 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <User className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+                <User className="w-12 h-12 text-green-600 mx-auto mb-2" />
                 <h2 className="text-xl font-semibold">Как вас зовут?</h2>
               </div>
               <input
@@ -180,7 +180,7 @@ export default function OnboardingPage() {
                 placeholder="Введите ваше имя"
                 value={data.name}
                 onChange={(e) => setData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
           )}
@@ -188,7 +188,7 @@ export default function OnboardingPage() {
           {step === 2 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <Heart className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+                <Heart className="w-12 h-12 text-green-600 mx-auto mb-2" />
                 <h2 className="text-xl font-semibold">Немного о вас</h2>
               </div>
               <div>
@@ -198,7 +198,7 @@ export default function OnboardingPage() {
                   placeholder="25"
                   value={data.age || ''}
                   onChange={(e) => setData(prev => ({ ...prev, age: e.target.value ? parseInt(e.target.value) : null }))}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <div>
@@ -228,7 +228,7 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <Ruler className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+                <Ruler className="w-12 h-12 text-green-600 mx-auto mb-2" />
                 <h2 className="text-xl font-semibold">Физические данные</h2>
               </div>
               <div>
@@ -238,7 +238,7 @@ export default function OnboardingPage() {
                   placeholder="170"
                   value={data.height || ''}
                   onChange={(e) => setData(prev => ({ ...prev, height: e.target.value ? parseInt(e.target.value) : null }))}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <div>
@@ -248,7 +248,7 @@ export default function OnboardingPage() {
                   placeholder="70"
                   value={data.currentWeight || ''}
                   onChange={(e) => setData(prev => ({ ...prev, currentWeight: e.target.value ? parseFloat(e.target.value) : null }))}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
                 />
               </div>
             </div>
@@ -257,7 +257,7 @@ export default function OnboardingPage() {
           {step === 4 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <Target className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+                <Target className="w-12 h-12 text-green-600 mx-auto mb-2" />
                 <h2 className="text-xl font-semibold">Ваша цель</h2>
               </div>
               <div className="space-y-3">
@@ -292,7 +292,7 @@ export default function OnboardingPage() {
           {step === 5 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <Scale className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+                <Scale className="w-12 h-12 text-green-600 mx-auto mb-2" />
                 <h2 className="text-xl font-semibold">Детали цели</h2>
               </div>
               <div>
@@ -302,7 +302,7 @@ export default function OnboardingPage() {
                   placeholder="65"
                   value={data.targetWeight || ''}
                   onChange={(e) => setData(prev => ({ ...prev, targetWeight: e.target.value ? parseFloat(e.target.value) : null }))}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <div>
@@ -312,7 +312,7 @@ export default function OnboardingPage() {
                   placeholder="12"
                   value={data.timeframe || ''}
                   onChange={(e) => setData(prev => ({ ...prev, timeframe: e.target.value ? parseInt(e.target.value) : null }))}
-                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
                 />
               </div>
             </div>
@@ -321,7 +321,7 @@ export default function OnboardingPage() {
           {step === 6 && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <Calendar className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+                <Calendar className="w-12 h-12 text-green-600 mx-auto mb-2" />
                 <h2 className="text-xl font-semibold">Уровень активности</h2>
               </div>
               <div className="space-y-3">

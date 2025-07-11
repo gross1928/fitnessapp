@@ -325,9 +325,9 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Загрузка...</p>
           {error && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 max-w-md">
@@ -349,7 +349,7 @@ export default function DashboardPage() {
   // Если есть ошибка но загрузка завершена
   if (error && !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 flex items-center justify-center p-4">
         <div className="text-center max-w-md">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-gray-900 mb-2">Ошибка загрузки</h1>
@@ -386,9 +386,9 @@ export default function DashboardPage() {
   // Если нет пользователя, но нет ошибки - показываем загрузку
   if (!user && !error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Инициализация пользователя...</p>
         </div>
       </div>
@@ -422,13 +422,13 @@ export default function DashboardPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 p-4">
       <div className="max-w-lg mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center pt-6 pb-4 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 rounded-3xl shadow-2xl border border-purple-400/30 relative overflow-hidden">
+        <div className="text-center pt-6 pb-4 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 rounded-3xl shadow-2xl border border-green-400/30 relative overflow-hidden">
           {/* Светящийся фон */}
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-purple-500/20 to-blue-600/10" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,215,0,0.1),transparent_70%)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 via-emerald-500/20 to-teal-600/10" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_70%)]" />
           
           <div className="relative z-10">
             <h1 className="text-4xl font-black mb-3 bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-2xl" 
@@ -438,10 +438,10 @@ export default function DashboardPage() {
                 }}>
               ДаЕда
             </h1>
-            <p className="text-blue-100 text-lg font-medium leading-relaxed">
+            <p className="text-green-100 text-lg font-medium leading-relaxed">
               Добро пожаловать, <span className="text-yellow-300 font-bold">{activeUser?.name || 'Пользователь'}</span>! 
               <br />
-              <span className="text-purple-200">Хорошего дня {timeOfDay} 👋</span>
+              <span className="text-emerald-200">Хорошего дня {timeOfDay} 👋</span>
             </p>
             {!user && (
               <div className="mt-4 px-4 py-2 bg-amber-400/20 border border-amber-300/40 rounded-xl text-amber-200 text-sm backdrop-blur-sm">
@@ -522,11 +522,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-700/50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5" />
+        <div className="bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-2xl border border-green-200/50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5" />
           <div className="relative z-10">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <Plus className="w-5 h-5 mr-2 text-yellow-400" />
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Plus className="w-5 h-5 mr-2 text-green-600" />
               Быстрые действия
             </h3>
           
@@ -583,19 +583,19 @@ export default function DashboardPage() {
         </div>
 
         {/* Progress Chart */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl border border-gray-700/50 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-blue-500/5" />
+        <div className="bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-2xl border border-green-200/50 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5" />
           <div className="relative z-10">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
               Прогресс за неделю
             </h3>
             
             <div className="text-center py-8">
-              <div className="text-gray-400 mb-4">
+              <div className="text-gray-500 mb-4">
                 <TrendingUp className="w-12 h-12 mx-auto" />
               </div>
-              <p className="text-gray-300 text-sm">
+              <p className="text-gray-600 text-sm">
                 Начните отслеживать питание и вес,<br />
                 чтобы увидеть свой прогресс
               </p>
@@ -604,7 +604,7 @@ export default function DashboardPage() {
         </div>
 
         {/* AI Coach suggestion */}
-        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden border border-purple-400/30">
+        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden border border-green-400/30">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 to-transparent" />
           <div className="relative z-10">
             <div className="flex items-start space-x-3">
@@ -613,7 +613,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h4 className="font-bold mb-2 text-yellow-200">Совет от ДаЕда</h4>
-                <p className="text-sm text-blue-100 leading-relaxed">
+                <p className="text-sm text-green-100 leading-relaxed">
                   Отличная работа! Вы почти достигли цели по калориям сегодня. 
                   Рекомендую добавить немного белка в следующий прием пищи. 
                   Попробуйте греческий йогурт с орехами! 🥜

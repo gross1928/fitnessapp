@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createServiceRoleClient } from '@/lib/supabase'
 import { calculateBMR, calculateTDEE } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const telegramId = request.headers.get('x-telegram-user-id')
     
-    console.log('Онбординг для telegram_id:', telegramId)
-    console.log('Данные тела запроса:', body)
+    console.log('🎯 Онбординг для telegram_id:', telegramId)
+    console.log('📝 Данные тела запроса:', body)
     
     if (!telegramId) {
       return NextResponse.json(
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // Валидация обязательных полей
     if (!name || !age || !height || !gender || !current_weight || !target_weight || !goal) {
-      console.error('Не все обязательные поля заполнены:', {
+      console.error('❌ Не все обязательные поля заполнены:', {
         name: !!name,
         age: !!age,
         height: !!height,
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServerClient()
+    // Используем service role клиент для обхода RLS
+    const supabase = createServiceRoleClient()
 
     // Рассчитываем базовые метрики
     const bmr = calculateBMR(current_weight, height, age, gender)
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       dailyCalories = tdee + 500 // профицит 500 ккал для набора веса
     }
 
-    console.log('Расчетные данные:', { bmr, tdee, dailyCalories })
+    console.log('🧮 Расчетные данные:', { bmr, tdee, dailyCalories })
 
     // Проверяем, существует ли пользователь
     const { data: existingUsers, error: checkError } = await supabase
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       .eq('telegram_id', parseInt(telegramId))
 
     if (checkError) {
-      console.error('Ошибка проверки существующего пользователя:', checkError)
+      console.error('❌ Ошибка проверки существующего пользователя:', checkError)
       return NextResponse.json(
         { success: false, error: 'Ошибка проверки пользователя' },
         { status: 500 }
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     const existingUser = existingUsers && existingUsers.length > 0 ? existingUsers[0] : null
 
     if (existingUser) {
-      console.log('Обновляем существующего пользователя:', existingUser.id)
+      console.log('🔄 Обновляем существующего пользователя:', existingUser.id)
       
       // Обновляем существующего пользователя
       const { data: users, error } = await supabase
@@ -107,29 +108,39 @@ export async function POST(request: NextRequest) {
         .select()
 
       if (error) {
-        console.error('Ошибка обновления пользователя:', error)
+        console.error('❌ Ошибка обновления пользователя:', error)
+        console.error('🔍 Детали ошибки обновления:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         return NextResponse.json(
-          { success: false, error: 'Ошибка обновления данных' },
+          { 
+            success: false, 
+            error: `Ошибка обновления данных: ${error.message}`,
+            details: error.details || 'Подробности недоступны'
+          },
           { status: 500 }
         )
       }
 
       if (!users || users.length === 0) {
-        console.error('Пользователь не найден для обновления')
+        console.error('❌ Пользователь не найден для обновления')
         return NextResponse.json(
           { success: false, error: 'Пользователь не найден для обновления' },
           { status: 404 }
         )
       }
 
-      console.log('Пользователь успешно обновлен')
+      console.log('✅ Пользователь успешно обновлен')
       return NextResponse.json({
         success: true,
         data: users[0],
         message: 'Профиль обновлен успешно!'
       })
     } else {
-      console.log('Создаем нового пользователя')
+      console.log('🆕 Создаем нового пользователя')
       
       // Создаем нового пользователя
       const newUserData = {
@@ -151,7 +162,7 @@ export async function POST(request: NextRequest) {
         daily_water_target: Math.round(current_weight * 35)
       }
 
-      console.log('Данные нового пользователя:', newUserData)
+      console.log('📝 Данные нового пользователя:', newUserData)
 
       const { data: users, error } = await supabase
         .from('users')
@@ -159,22 +170,32 @@ export async function POST(request: NextRequest) {
         .select()
 
       if (error) {
-        console.error('Ошибка создания пользователя:', error)
+        console.error('❌ Ошибка создания пользователя:', error)
+        console.error('🔍 Детали ошибки создания:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         return NextResponse.json(
-          { success: false, error: 'Ошибка создания профиля' },
+          { 
+            success: false, 
+            error: `Ошибка создания профиля: ${error.message}`,
+            details: error.details || 'Подробности недоступны'
+          },
           { status: 500 }
         )
       }
 
       if (!users || users.length === 0) {
-        console.error('Пользователь не был создан')
+        console.error('❌ Пользователь не был создан')
         return NextResponse.json(
           { success: false, error: 'Пользователь не был создан' },
           { status: 500 }
         )
       }
 
-      console.log('Пользователь успешно создан:', users[0].id)
+      console.log('✅ Пользователь успешно создан:', users[0].id)
       return NextResponse.json({
         success: true,
         data: users[0],
@@ -183,9 +204,13 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Ошибка API онбординга:', error)
+    console.error('💥 Критическая ошибка API онбординга:', error)
     return NextResponse.json(
-      { success: false, error: 'Внутренняя ошибка сервера' },
+      { 
+        success: false, 
+        error: 'Внутренняя ошибка сервера',
+        details: error instanceof Error ? error.message : 'Неизвестная ошибка'
+      },
       { status: 500 }
     )
   }

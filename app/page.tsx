@@ -60,6 +60,9 @@ function MetricCard({
             <span className="text-2xl font-bold">{value.toLocaleString('ru-RU')}</span>
             <span className="text-sm opacity-80 ml-1">{unit}</span>
           </div>
+          {target && (
+            <span className="text-xs opacity-70">{target.toLocaleString('ru-RU')}</span>
+          )}
         </div>
         
         {target && (

@@ -286,55 +286,45 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t border-green-200/50 p-4">
-        <div className="flex items-end gap-3">
+      <div className="bg-white border-t border-green-200/50 p-3">
+        <div className="flex items-center gap-2">
           {/* File Upload Button */}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingFile || loading}
-            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 flex-shrink-0"
           >
             {uploadingFile ? (
-              <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
+              <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
             ) : (
-              <Paperclip className="w-5 h-5 text-gray-600" />
+              <Paperclip className="w-4 h-4 text-gray-600" />
             )}
           </button>
 
-          {/* Camera Button */}
-          <button
-            onClick={handleCameraPhoto}
-            disabled={loading}
-            className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
-          >
-            <Camera className="w-5 h-5 text-gray-600" />
-          </button>
-
           {/* Text Input */}
-          <div className="flex-1 flex items-end gap-2">
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendText()
-                }
-              }}
-              placeholder="Сообщение..."
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              rows={1}
-              style={{ minHeight: '48px', maxHeight: '120px' }}
-            />
-            
-            <button
-              onClick={handleSendText}
-              disabled={!inputText.trim() || loading}
-              className="p-3.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-xl disabled:shadow-none"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </div>
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSendText()
+              }
+            }}
+            placeholder="Сообщение..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+            rows={1}
+            style={{ minHeight: '36px', maxHeight: '80px' }}
+          />
+          
+          {/* Send Button */}
+          <button
+            onClick={handleSendText}
+            disabled={!inputText.trim() || loading}
+            className="p-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg transition-colors disabled:cursor-not-allowed flex-shrink-0"
+          >
+            <Send className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

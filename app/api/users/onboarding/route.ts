@@ -50,6 +50,15 @@ export async function POST(request: NextRequest) {
     // Используем service role клиент для обхода RLS
     const supabase = createServiceRoleClient()
 
+    // Маппим короткие значения goal в полные для базы данных
+    const goalTypeMapping: { [key: string]: string } = {
+      'lose': 'lose_weight',
+      'gain': 'gain_weight', 
+      'maintain': 'maintain_weight'
+    }
+    
+    const mappedGoalType = goalTypeMapping[goal] || goal
+
     // Рассчитываем базовые метрики
     const bmr = calculateBMR(current_weight, height, age, gender)
     const tdee = calculateTDEE(bmr, activity_level)
@@ -96,7 +105,7 @@ export async function POST(request: NextRequest) {
           target_weight,
           goal_deadline: goal_timeframe ? new Date(Date.now() + goal_timeframe * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null,
           activity_level,
-          goal_type: goal,
+          goal_type: mappedGoalType,
           daily_calorie_target: Math.round(dailyCalories),
           daily_protein_target: Math.round(current_weight * 2), // 2г белка на кг веса
           daily_fat_target: Math.round(dailyCalories * 0.25 / 9), // 25% от калорий
@@ -154,7 +163,7 @@ export async function POST(request: NextRequest) {
         target_weight,
         goal_deadline: goal_timeframe ? new Date(Date.now() + goal_timeframe * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null,
         activity_level,
-        goal_type: goal,
+        goal_type: mappedGoalType,
         daily_calorie_target: Math.round(dailyCalories),
         daily_protein_target: Math.round(current_weight * 2),
         daily_fat_target: Math.round(dailyCalories * 0.25 / 9),

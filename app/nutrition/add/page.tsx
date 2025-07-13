@@ -121,27 +121,64 @@ export default function AddFoodPage() {
     fileInputRef.current?.click()
   }
 
+  const analyzeFoodPhoto = async (file: File) => {
+    try {
+      setLoading('gallery')
+      
+      const formData = new FormData()
+      formData.append('food_photo', file)
+
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
+        window.Telegram.WebApp.initDataUnsafe?.user : null
+      
+      const response = await fetch('/api/nutrition/analyze-food', {
+        method: 'POST',
+        headers: {
+          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+        },
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        const analysis = result.data.analysis
+        const message = `🤖 Анализ: ${analysis.detected_food}\n\n` +
+          `📊 Калории: ${analysis.estimated_calories} ккал/100г\n` +
+          `🥩 Белки: ${analysis.estimated_nutrition.proteins}г\n` +
+          `🧈 Жиры: ${analysis.estimated_nutrition.fats}г\n` +
+          `🍞 Углеводы: ${analysis.estimated_nutrition.carbs}г\n\n` +
+          `Уверенность: ${analysis.confidence}%`
+
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          window.Telegram.WebApp.showAlert(message)
+        } else {
+          alert(message)
+        }
+        
+        loadTodayHistory()
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('Ошибка анализа фото:', error)
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.showAlert('Ошибка анализа. Попробуйте еще раз.')
+      } else {
+        alert('Ошибка анализа. Попробуйте еще раз.')
+      }
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) {
       setLoading(null)
       return
     }
-
-    try {
-      // Здесь будет обработка файла с AI анализом
-      console.log('Selected file:', file.name)
-      
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert(`Анализируем фото: ${file.name}. Функция скоро будет готова! 🤖`)
-      } else {
-        alert(`Анализируем фото: ${file.name}. Функция скоро будет готова! 🤖`)
-      }
-    } catch (error) {
-      console.error('File processing error:', error)
-    } finally {
-      setLoading(null)
-    }
+    await analyzeFoodPhoto(file)
   }
 
   const handleManualInput = () => {

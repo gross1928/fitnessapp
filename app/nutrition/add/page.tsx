@@ -14,6 +14,7 @@ import {
   Utensils,
   Zap
 } from 'lucide-react'
+import AnalysisModal from '@/components/nutrition/AnalysisModal'; // Импортируем новый компонент
 
 interface FoodEntry {
   id: string
@@ -25,6 +26,18 @@ interface FoodEntry {
   carbs: number
 }
 
+// Новый тип для результатов анализа
+interface NutritionData {
+  detected_food: string;
+  estimated_calories: number;
+  estimated_nutrition: {
+    proteins: number;
+    fats: number;
+    carbs: number;
+  };
+  confidence: number;
+}
+
 export default function AddFoodPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -32,6 +45,11 @@ export default function AddFoodPage() {
   const [loading, setLoading] = useState<string | null>(null)
   const [todayHistory, setTodayHistory] = useState<FoodEntry[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
+
+  // Состояния для модального окна
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<NutritionData | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Загрузка данных при монтировании компонента
   useEffect(() => {
@@ -122,9 +140,21 @@ export default function AddFoodPage() {
   }
 
   const analyzeFoodPhoto = async (file: File) => {
+    setIsModalOpen(true);
+    setLoading('gallery');
+    setAnalysisResult(null);
+
+    // Симуляция прогресса загрузки
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 10;
+      if (progress > 95) {
+        progress = 95; // Оставляем немного до завершения
+      }
+      setUploadProgress(Math.round(progress));
+    }, 200);
+
     try {
-      setLoading('gallery')
-      
       const formData = new FormData()
       formData.append('food_photo', file)
 
@@ -140,22 +170,12 @@ export default function AddFoodPage() {
       })
 
       const result = await response.json()
+      
+      clearInterval(interval);
+      setUploadProgress(100);
 
       if (result.success) {
-        const analysis = result.data.analysis
-        const message = `🤖 Анализ: ${analysis.detected_food}\n\n` +
-          `📊 Калории: ${analysis.estimated_calories} ккал/100г\n` +
-          `🥩 Белки: ${analysis.estimated_nutrition.proteins}г\n` +
-          `🧈 Жиры: ${analysis.estimated_nutrition.fats}г\n` +
-          `🍞 Углеводы: ${analysis.estimated_nutrition.carbs}г\n\n` +
-          `Уверенность: ${analysis.confidence}%`
-
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          window.Telegram.WebApp.showAlert(message)
-        } else {
-          alert(message)
-        }
-        
+        setAnalysisResult(result.data.analysis);
         loadTodayHistory()
       } else {
         throw new Error(result.error)
@@ -167,8 +187,10 @@ export default function AddFoodPage() {
       } else {
         alert('Ошибка анализа. Попробуйте еще раз.')
       }
+      setIsModalOpen(false); // Закрываем окно при ошибке
     } finally {
-      setLoading(null)
+       clearInterval(interval);
+       setTimeout(() => setLoading(null), 500); // Небольшая задержка перед скрытием лоадера
     }
   }
 
@@ -201,9 +223,21 @@ export default function AddFoodPage() {
   }
 
   const analyzeTextInput = async (description: string) => {
+    setIsModalOpen(true);
+    setLoading('text');
+    setAnalysisResult(null);
+
+    // Симуляция прогресса для текстового анализа
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 15;
+      if (progress > 95) {
+        progress = 95;
+      }
+      setUploadProgress(Math.round(progress));
+    }, 150);
+
     try {
-      setLoading('text')
-      
       const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
         window.Telegram.WebApp.initDataUnsafe?.user : null
       
@@ -217,22 +251,12 @@ export default function AddFoodPage() {
       })
 
       const result = await response.json()
+      
+      clearInterval(interval);
+      setUploadProgress(100);
 
       if (result.success) {
-        const analysis = result.data.analysis
-        const message = `🤖 Анализ: ${analysis.detected_food}\n\n` +
-          `📊 Калории: ${analysis.estimated_calories} ккал/100г\n` +
-          `🥩 Белки: ${analysis.estimated_nutrition.proteins}г\n` +
-          `🧈 Жиры: ${analysis.estimated_nutrition.fats}г\n` +
-          `🍞 Углеводы: ${analysis.estimated_nutrition.carbs}г\n\n` +
-          `Уверенность: ${analysis.confidence}%`
-
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          window.Telegram.WebApp.showAlert(message)
-        } else {
-          alert(message)
-        }
-        
+        setAnalysisResult(result.data.analysis);
         // Перезагружаем историю после успешного анализа
         loadTodayHistory()
       } else {
@@ -245,8 +269,10 @@ export default function AddFoodPage() {
       } else {
         alert('Ошибка анализа. Попробуйте еще раз.')
       }
+      setIsModalOpen(false);
     } finally {
-      setLoading(null)
+      clearInterval(interval);
+      setTimeout(() => setLoading(null), 500);
     }
   }
 
@@ -486,6 +512,17 @@ export default function AddFoodPage() {
         accept="image/*"
         onChange={handleFileSelect}
         className="hidden"
+      />
+
+      <AnalysisModal 
+        isOpen={isModalOpen}
+        isLoading={loading === 'gallery' || loading === 'text'}
+        analysisResult={analysisResult}
+        onClose={() => {
+          setIsModalOpen(false);
+          setAnalysisResult(null);
+        }}
+        uploadProgress={uploadProgress}
       />
     </div>
   )

@@ -290,20 +290,20 @@ ${healthAnalysis.follow_up_suggestions?.map(s => `• ${s}`).join('\n') || '• 
 
         const fullUserContext = {
           // Базовая информация
-          name: user.name,
-          age: user.age,
-          height: user.height,
-          goals: user.goal_type,
-          currentWeight: user.current_weight,
-          targetWeight: user.target_weight,
-          activityLevel: user.activity_level,
+          name: user.name ?? undefined,
+          age: user.age ?? undefined,
+          height: user.height ?? undefined,
+          goals: user.goal_type ?? undefined,
+          currentWeight: user.current_weight ?? undefined,
+          targetWeight: user.target_weight ?? undefined,
+          activityLevel: user.activity_level ?? undefined,
           
           // Цели по питанию
-          dailyCalorieTarget: user.daily_calorie_target,
-          dailyProteinTarget: user.daily_protein_target,
-          dailyFatTarget: user.daily_fat_target,
-          dailyCarbTarget: user.daily_carb_target,
-          dailyWaterTarget: user.daily_water_target,
+          dailyCalorieTarget: user.daily_calorie_target ?? undefined,
+          dailyProteinTarget: user.daily_protein_target ?? undefined,
+          dailyFatTarget: user.daily_fat_target ?? undefined,
+          dailyCarbTarget: user.daily_carb_target ?? undefined,
+          dailyWaterTarget: user.daily_water_target ?? undefined,
           
           // Показатели за сегодня
           todayNutrition: {
@@ -321,20 +321,20 @@ ${healthAnalysis.follow_up_suggestions?.map(s => `• ${s}`).join('\n') || '• 
             mealType: meal.meal_type,
             amount: meal.amount,
             calories: meal.calories,
-            time: new Date(meal.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+            time: meal.created_at ? new Date(meal.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '-:-'
           })),
           
           // Недавние анализы
           recentHealthAnalyses: (recentAnalyses || []).map(analysis => ({
             type: analysis.analysis_type,
             keyFindings: analysis.key_findings?.slice(0, 2) || [], // только ключевые находки
-            date: new Date(analysis.created_at).toLocaleDateString('ru-RU')
+            date: analysis.created_at ? new Date(analysis.created_at).toLocaleDateString('ru-RU') : '---'
           })),
           
           // Изменения веса
           weightProgress: (recentWeight || []).map(entry => ({
             weight: entry.weight,
-            date: new Date(entry.created_at).toLocaleDateString('ru-RU')
+            date: entry.created_at ? new Date(entry.created_at).toLocaleDateString('ru-RU') : '---'
           }))
         }
 

@@ -1,20 +1,10 @@
 import { createClient } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
-import { openai } from '@/lib/openai'
+import { analyzeFoodImage } from '@/lib/openai' // Импортируем нашу функцию
 import { Database } from '@/types/database'
 
-// Тип для анализа от OpenAI
-type FoodAnalysis = Database['public']['Tables']['food_analysis']['Row'] & {
-  detected_food: string
-  estimated_calories: number
-  estimated_nutrition: {
-    proteins: number
-    fats: number
-    carbs: number
-  }
-  confidence: number
-  error?: string
-}
+type FoodAnalysis = ReturnType<typeof analyzeFoodImage> extends Promise<infer T> ? T : never;
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,55 +34,23 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await foodPhoto.arrayBuffer())
     const base64Image = buffer.toString('base64')
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Что на этом фото? Оцени калорийность, БЖУ на 100г. Ответ дай в формате JSON: {detected_food: string, estimated_calories: number, estimated_nutrition: {proteins: number, fats: number, carbs: number}, confidence: number (0-100)}." },
-            {
-              type: "image_url",
-              image_url: {
-                "url": `data:image/jpeg;base64,${base64Image}`
-              }
-            },
-          ],
-        },
-      ],
-      max_tokens: 300,
-    });
+    // Используем централизованную функцию
+    const analysisJson = await analyzeFoodImage(base64Image)
     
-    const analysisResult = response.choices[0].message.content
-    if (!analysisResult) {
-      throw new Error('OpenAI returned no content')
-    }
-    
-    let analysisJson: FoodAnalysis
-    try {
-      analysisJson = JSON.parse(analysisResult)
-    } catch (e) {
-      throw new Error('Failed to parse analysis from OpenAI')
-    }
-
-    if(analysisJson.error) {
-        throw new Error(`OpenAI error: ${analysisJson.error}`)
-    }
-
     // Сохранение в базу данных
     const { data: mealEntry, error: insertError } = await supabase
       .from('meal_entries')
       .insert({
         user_id: user.id,
         meal_type: 'snack', // По умолчанию, можно дать пользователю выбор
-        food_name: analysisJson.detected_food, // Добавляем поле food_name, если его нет
+        food_name: analysisJson.detected_food,
         calories: analysisJson.estimated_calories,
-        protein: analysisJson.estimated_nutrition.proteins,
-        fat: analysisJson.estimated_nutrition.fats,
-        carbs: analysisJson.estimated_nutrition.carbs,
+        proteins: analysisJson.estimated_nutrition.proteins, // исправлено fat на proteins
+        fats: analysisJson.estimated_nutrition.fats,     // исправлено carbs на fats
+        carbs: analysisJson.estimated_nutrition.carbs,     // исправлено amount на carbs
         amount: 100, // Предполагаем 100г для анализа
       })
-      .select()
+      .select('id')
       .single()
 
     if (insertError) {
@@ -106,7 +64,7 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         image_url: null, // В будущем можно сохранять ссылку на фото в storage
         analysis_provider: 'openai',
-        raw_response: analysisJson,
+        raw_response: analysisJson as any, // Приводим тип, так как в базе он Json
         confidence_score: analysisJson.confidence
       })
 

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createServiceRoleClient } from '@/lib/supabase' // Используем сервисный клиент
 import { NextRequest, NextResponse } from 'next/server'
 import { analyzeFoodImage } from '@/lib/openai' // Импортируем нашу функцию
 import { Database } from '@/types/database'
@@ -8,7 +8,7 @@ type FoodAnalysis = ReturnType<typeof analyzeFoodImage> extends Promise<infer T>
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServiceRoleClient() // Заменяем на сервисный клиент
     const formData = await req.formData()
     const foodPhoto = formData.get('food_photo') as File | null
     const telegramUserId = req.headers.get('x-telegram-user-id')

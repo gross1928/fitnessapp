@@ -347,18 +347,20 @@ export default function ChatPage() {
               }
             }}
             placeholder="Сообщение..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-            rows={1}
-            style={{ minHeight: '36px', maxHeight: '80px' }}
+            className="flex-grow px-4 py-2 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
           />
           
           {/* Send Button */}
           <button
             onClick={handleSendText}
             disabled={!inputText.trim() || loading}
-            className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:bg-gray-300 disabled:from-gray-300 disabled:to-gray-300 text-white rounded-lg transition-all duration-200 disabled:cursor-not-allowed flex-shrink-0 shadow-md hover:shadow-lg disabled:shadow-none"
+            className="p-3 rounded-full bg-green-500 text-white shadow-md hover:bg-green-600 transition-colors disabled:bg-green-300 disabled:cursor-not-allowed"
           >
-            <Send className="w-4 h-4" />
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>

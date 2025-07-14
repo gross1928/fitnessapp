@@ -25,6 +25,20 @@ export interface OnboardingData {
 }
 
 // Nutrition types
+export interface NutritionData {
+  dish_name: string;
+  total_nutrition: {
+    calories: number;
+    proteins: number;
+    fats: number;
+    carbs: number;
+  };
+  ingredients: Array<{
+    name: string;
+    weight_grams: number;
+  }>;
+}
+
 export interface FoodItem {
   id: string
   user_id: string

@@ -14,7 +14,8 @@ import {
   Utensils,
   Zap
 } from 'lucide-react'
-import AnalysisModal from '@/components/nutrition/AnalysisModal'; 
+import AnalysisModal from '@/components/nutrition/AnalysisModal';
+import { NutritionData } from '@/types'; 
 
 interface FoodEntry {
   id: string
@@ -26,20 +27,7 @@ interface FoodEntry {
   carbs: number
 }
 
-// Обновленный тип для результатов анализа, должен совпадать с AnalysisModal
-interface NutritionData {
-  dish_name: string;
-  total_nutrition: {
-    calories: number;
-    proteins: number;
-    fats: number;
-    carbs: number;
-  };
-  ingredients: Array<{
-    name: string;
-    weight_grams: number;
-  }>;
-}
+
 
 export default function AddFoodPage() {
   const router = useRouter()

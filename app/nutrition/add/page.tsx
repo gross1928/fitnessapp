@@ -14,7 +14,7 @@ import {
   Utensils,
   Zap
 } from 'lucide-react'
-import AnalysisModal from '@/components/nutrition/AnalysisModal'; // Импортируем новый компонент
+import AnalysisModal from '@/components/nutrition/AnalysisModal'; 
 
 interface FoodEntry {
   id: string
@@ -26,16 +26,19 @@ interface FoodEntry {
   carbs: number
 }
 
-// Новый тип для результатов анализа
+// Обновленный тип для результатов анализа, должен совпадать с AnalysisModal
 interface NutritionData {
-  detected_food: string;
-  estimated_calories: number;
-  estimated_nutrition: {
+  dish_name: string;
+  total_nutrition: {
+    calories: number;
     proteins: number;
     fats: number;
     carbs: number;
   };
-  confidence: number;
+  ingredients: Array<{
+    name: string;
+    weight_grams: number;
+  }>;
 }
 
 export default function AddFoodPage() {
@@ -59,12 +62,16 @@ export default function AddFoodPage() {
 
   const loadTodayHistory = async () => {
     try {
-      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
-        window.Telegram.WebApp.initDataUnsafe?.user : null
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
       
+      if (!telegramUser) {
+        setHistoryLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/nutrition/history', {
         headers: {
-          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+          'x-telegram-user-id': telegramUser.id.toString()
         }
       })
 
@@ -84,12 +91,13 @@ export default function AddFoodPage() {
 
   const loadWaterIntake = async () => {
     try {
-      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
-        window.Telegram.WebApp.initDataUnsafe?.user : null
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
+      
+      if (!telegramUser) return;
       
       const response = await fetch('/api/nutrition/water', {
         headers: {
-          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+          'x-telegram-user-id': telegramUser.id.toString()
         }
       })
 
@@ -158,13 +166,16 @@ export default function AddFoodPage() {
       const formData = new FormData()
       formData.append('food_photo', file)
 
-      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
-        window.Telegram.WebApp.initDataUnsafe?.user : null
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
+      
+      if (!telegramUser) {
+        throw new Error("Пользователь Telegram не определен.");
+      }
       
       const response = await fetch('/api/nutrition/analyze-food', {
         method: 'POST',
         headers: {
-          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+          'x-telegram-user-id': telegramUser.id.toString()
         },
         body: formData
       })
@@ -175,8 +186,38 @@ export default function AddFoodPage() {
       setUploadProgress(100);
 
       if (result.success) {
-        setAnalysisResult(result.data.analysis);
-        loadTodayHistory()
+        const analysis: NutritionData = result.data.analysis;
+        setAnalysisResult(analysis);
+        
+        // Обновленная логика сохранения
+        const totalWeight = analysis.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0);
+        
+        // Отправляем данные для сохранения в фоне, не блокируя UI
+        fetch('/api/nutrition/save-meal', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-telegram-user-id': telegramUser.id.toString(),
+          },
+          body: JSON.stringify({
+            food_name: analysis.dish_name,
+            calories: analysis.total_nutrition.calories,
+            proteins: analysis.total_nutrition.proteins,
+            fats: analysis.total_nutrition.fats,
+            carbs: analysis.total_nutrition.carbs,
+            amount: totalWeight > 0 ? totalWeight : 100, // Используем суммарный вес или 100г по умолчанию
+            raw_analysis: analysis, // Сохраняем полный анализ
+          }),
+        })
+        .then(res => res.json())
+        .then(saveResult => {
+          if (saveResult.success) {
+            console.log('Прием пищи успешно сохранен');
+            loadTodayHistory(); // Обновляем историю на странице
+          } else {
+            console.error('Ошибка сохранения приема пищи:', saveResult.error);
+          }
+        });
       } else {
         throw new Error(result.error)
       }
@@ -238,14 +279,17 @@ export default function AddFoodPage() {
     }, 150);
 
     try {
-      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
-        window.Telegram.WebApp.initDataUnsafe?.user : null
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
+      
+      if (!telegramUser) {
+        throw new Error("Пользователь Telegram не определен.");
+      }
       
       const response = await fetch('/api/nutrition/analyze-text', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+          'x-telegram-user-id': telegramUser.id.toString()
         },
         body: JSON.stringify({ foodDescription: description })
       })
@@ -256,9 +300,37 @@ export default function AddFoodPage() {
       setUploadProgress(100);
 
       if (result.success) {
-        setAnalysisResult(result.data.analysis);
-        // Перезагружаем историю после успешного анализа
-        loadTodayHistory()
+        const analysis: NutritionData = result.data.analysis;
+        setAnalysisResult(analysis);
+
+        // Такая же обновленная логика сохранения
+        const totalWeight = analysis.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0);
+
+        fetch('/api/nutrition/save-meal', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-telegram-user-id': telegramUser.id.toString(),
+          },
+          body: JSON.stringify({
+            food_name: analysis.dish_name,
+            calories: analysis.total_nutrition.calories,
+            proteins: analysis.total_nutrition.proteins,
+            fats: analysis.total_nutrition.fats,
+            carbs: analysis.total_nutrition.carbs,
+            amount: totalWeight > 0 ? totalWeight : 100,
+            raw_analysis: analysis,
+          }),
+        })
+        .then(res => res.json())
+        .then(saveResult => {
+          if (saveResult.success) {
+            console.log('Прием пищи успешно сохранен');
+            loadTodayHistory();
+          } else {
+            console.error('Ошибка сохранения приема пищи:', saveResult.error);
+          }
+        });
       } else {
         throw new Error(result.error)
       }
@@ -277,24 +349,55 @@ export default function AddFoodPage() {
   }
 
   const handleBarcodeScanner = () => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
-      window.Telegram.WebApp.showAlert('Сканер штрих-кодов скоро будет доступен! 📱')
+    setLoading('scan')
+    
+    const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined;
+
+    if (tg) {
+      tg.HapticFeedback.impactOccurred('medium')
+      
+      if (tg.isVersionAtLeast('6.4')) {
+        tg.showScanQrPopup({
+          text: "Наведите камеру на штрих-код"
+        }, (text) => {
+          if(text) {
+            tg.showAlert(`Отсканировано: ${text}`)
+            // Здесь будет логика обработки штрих-кода
+            setLoading(null) // ИСПРАВЛЕНИЕ: сброс загрузки
+            return true 
+          }
+          setLoading(null) // Сброс загрузки при закрытии
+          return false
+        })
+      } else {
+        tg.showAlert('Функция сканера штрих-кодов недоступна. Обновите Telegram.')
+        setLoading(null)
+      }
     } else {
-      alert('Сканер штрих-кодов скоро будет доступен! 📱')
+      alert('Сканер штрих-кодов доступен только в приложении Telegram')
+      setLoading(null)
     }
   }
 
   const handleAddWater = async (amount: number) => {
+    const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
+    
+    if (!telegramUser) {
+      alert('Пользователь не определен. Пожалуйста, перезапустите приложение.');
+      return;
+    }
+    
+    // Haptic feedback
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
+    }
+
     try {
-      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp ? 
-        window.Telegram.WebApp.initDataUnsafe?.user : null
-      
       const response = await fetch('/api/nutrition/water', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(telegramUser?.id && { 'x-telegram-user-id': telegramUser.id.toString() })
+          'x-telegram-user-id': telegramUser.id.toString()
         },
         body: JSON.stringify({ amount })
       })
@@ -302,214 +405,131 @@ export default function AddFoodPage() {
       const result = await response.json()
 
       if (result.success) {
-        // Обновляем состояние воды
-        setWaterIntake(result.data.totalToday)
-        
-        // Только haptic feedback, без уведомлений
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
-        }
-      } else {
-        throw new Error(result.error)
+        const newTotal = waterIntake + amount
+        setWaterIntake(newTotal)
       }
     } catch (error) {
       console.error('Ошибка добавления воды:', error)
-      
-      // Fallback: обновляем локально без уведомлений
-      setWaterIntake(prev => prev + amount)
-      
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light')
-      }
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 p-4">
-      <div className="max-w-lg mx-auto space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between pt-6 pb-4">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-xl bg-white/80 border border-green-200 hover:bg-green-50 transition-colors"
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 font-sans flex flex-col">
+      {/* Header */}
+      <header className="flex items-center justify-between mb-6">
+        <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-xl font-bold">Добавить приём пищи</h1>
+        <div className="w-10"></div>
+      </header>
+      
+      {/* Main Content */}
+      <main className="flex-grow">
+        {/* Input Options */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <button 
+            disabled={!!loading}
+            onClick={handleCameraPhoto} 
+            className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow disabled:opacity-50"
           >
-            <ArrowLeft className="w-6 h-6 text-green-600" />
+            <Camera className="w-10 h-10 mb-2 text-orange-500" />
+            <span className="font-semibold">Камера</span>
           </button>
           
-          <h1 className="text-2xl font-bold text-gray-800">Добавить еду</h1>
+          <button 
+            disabled={!!loading}
+            onClick={handleGalleryPhoto}
+            className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow disabled:opacity-50"
+          >
+            <Image className="w-10 h-10 mb-2 text-orange-500" />
+            <span className="font-semibold">Галерея</span>
+          </button>
           
-          <div className="w-10" /> {/* Spacer for centering */}
+          <button 
+            disabled={!!loading}
+            onClick={handleManualInput}
+            className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow disabled:opacity-50"
+          >
+            <Keyboard className="w-10 h-10 mb-2 text-orange-500" />
+            <span className="font-semibold">Вручную</span>
+          </button>
+
+          <button 
+            disabled={!!loading}
+            onClick={handleBarcodeScanner}
+            className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow disabled:opacity-50"
+          >
+            <ScanLine className="w-10 h-10 mb-2 text-orange-500" />
+            <span className="font-semibold">Штрих-код</span>
+          </button>
         </div>
 
-        {/* Main Actions */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200/50">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Utensils className="w-5 h-5 mr-2 text-green-600" />
-            Способы добавления
-          </h2>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={handleCameraPhoto}
-              disabled={loading === 'camera'}
-              className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
-            >
-              <Camera className="w-8 h-8 mx-auto mb-2" />
-              <span className="text-sm font-medium">Фото с камеры</span>
-              {loading === 'camera' && <div className="mt-1 text-xs">Загрузка...</div>}
-            </button>
-            
-            <button
-              onClick={handleGalleryPhoto}
-              disabled={loading === 'gallery'}
-              className="p-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
-            >
-              <Image className="w-8 h-8 mx-auto mb-2" />
-              <span className="text-sm font-medium">Из галереи</span>
-              {loading === 'gallery' && <div className="mt-1 text-xs">Загрузка...</div>}
-            </button>
-            
-            <button
-              onClick={handleManualInput}
-              disabled={loading === 'text'}
-              className="p-4 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50"
-            >
-              <Keyboard className="w-8 h-8 mx-auto mb-2" />
-              <span className="text-sm font-medium">Ручной ввод</span>
-              {loading === 'text' && <div className="mt-1 text-xs">Анализ...</div>}
-            </button>
-            
-            <button
-              onClick={handleBarcodeScanner}
-              className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              <ScanLine className="w-8 h-8 mx-auto mb-2" />
-              <span className="text-sm font-medium">Сканер кода</span>
-            </button>
+        {/* Water Intake */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-bold text-lg flex items-center">
+              <Droplets className="w-6 h-6 mr-2 text-blue-500" />
+              Вода
+            </h2>
+            <span className="font-bold text-lg text-blue-500">{waterIntake} мл</span>
           </div>
-        </div>
-
-        {/* Water Tracker */}
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 shadow-lg border border-blue-200/50">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Droplets className="w-5 h-5 mr-2 text-blue-600" />
-            Трекер воды
-          </h2>
-          
-          <div className="text-center mb-4">
-            <div className="text-3xl font-bold text-blue-600 mb-1">{waterIntake.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">мл сегодня</div>
-          </div>
-          
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleAddWater(250)}
-              className="flex-1 p-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center justify-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              +250мл
-            </button>
-            
-            <button
-              onClick={() => handleAddWater(500)}
-              className="flex-1 p-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 flex items-center justify-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              +500мл
-            </button>
+          <div className="grid grid-cols-4 gap-2">
+            {[100, 250, 500, 750].map(amount => (
+              <button 
+                key={amount}
+                onClick={() => handleAddWater(amount)}
+                className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-semibold py-2 rounded-lg flex items-center justify-center"
+              >
+                <Plus size={16} className="mr-1" />
+                {amount}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Today's History */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-green-200/50">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-green-600" />
-            История сегодня
+        <div>
+          <h2 className="font-bold text-lg mb-2 flex items-center">
+            <Clock className="w-6 h-6 mr-2 text-gray-500"/>
+            Сегодняшняя история
           </h2>
-          
           {historyLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-3"></div>
-              <p className="text-sm text-gray-500">Загрузка истории...</p>
-            </div>
+            <div className="text-center p-4">Загрузка...</div>
           ) : todayHistory.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {todayHistory.map((entry) => (
-                <div key={entry.id} className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200/50">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-medium text-gray-800">{entry.name}</h3>
-                      <div className="flex items-center text-sm text-gray-600 mt-1">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {entry.time}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">{entry.calories}</div>
-                      <div className="text-xs text-gray-500">ккал</div>
-                    </div>
+                <div key={entry.id} className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-md flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{entry.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{entry.time}</p>
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 text-center text-sm">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <div className="font-medium text-orange-600">{entry.protein}г</div>
-                      <div className="text-xs text-gray-600">Белки</div>
-                    </div>
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <div className="font-medium text-yellow-600">{entry.fat}г</div>
-                      <div className="text-xs text-gray-600">Жиры</div>
-                    </div>
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <div className="font-medium text-green-600">{entry.carbs}г</div>
-                      <div className="text-xs text-gray-600">Углеводы</div>
+                  <div className="text-right">
+                    <p className="font-bold text-orange-500">{entry.calories} ккал</p>
+                    <div className="flex space-x-2 text-xs">
+                      <span title="Белки">Б: {entry.protein}г</span>
+                      <span title="Жиры">Ж: {entry.fat}г</span>
+                      <span title="Углеводы">У: {entry.carbs}г</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">Сегодня еще ничего не добавлено</p>
+            <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl">
+              <Utensils className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+              <p>Вы еще ничего не ели сегодня.</p>
+              <p className="text-sm text-gray-500">Добавьте свой первый прием пищи!</p>
             </div>
           )}
         </div>
-
-        {/* Quick Add Shortcuts */}
-        <div className="bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl p-6 shadow-lg border border-yellow-200/50">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Zap className="w-5 h-5 mr-2 text-yellow-600" />
-            Быстрое добавление
-          </h2>
-          
-          <div className="grid grid-cols-3 gap-3">
-            <button className="p-3 bg-white rounded-lg border border-yellow-200 hover:bg-yellow-50 transition-colors text-center">
-              <div className="text-2xl mb-1">☕</div>
-              <div className="text-xs text-gray-600">Кофе</div>
-            </button>
-            
-            <button className="p-3 bg-white rounded-lg border border-yellow-200 hover:bg-yellow-50 transition-colors text-center">
-              <div className="text-2xl mb-1">🍎</div>
-              <div className="text-xs text-gray-600">Яблоко</div>
-            </button>
-            
-            <button className="p-3 bg-white rounded-lg border border-yellow-200 hover:bg-yellow-50 transition-colors text-center">
-              <div className="text-2xl mb-1">🥛</div>
-              <div className="text-xs text-gray-600">Молоко</div>
-            </button>
-          </div>
-        </div>
-
-        {/* Bottom padding for safe area */}
-        <div className="h-8" />
-      </div>
-
-      {/* Hidden file input for gallery */}
-      <input
+      </main>
+      
+      {/* Hidden file input */}
+      <input 
+        type="file" 
+        accept="image/*" 
         ref={fileInputRef}
-        type="file"
-        accept="image/*"
         onChange={handleFileSelect}
         className="hidden"
       />

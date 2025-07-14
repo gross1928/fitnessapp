@@ -179,8 +179,10 @@ export default function AddFoodPage() {
         const analysis: NutritionData = result.data.analysis;
         setAnalysisResult(analysis);
         
-        // Обновленная логика сохранения
-        const totalWeight = analysis.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0);
+        // Обновленная логика сохранения с проверкой
+        const totalWeight = Array.isArray(analysis.ingredients) 
+          ? analysis.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0)
+          : 0;
         
         // Отправляем данные для сохранения в фоне, не блокируя UI
         fetch('/api/nutrition/save-meal', {

@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       if (file) {
         if (file.type.startsWith('image/')) {
           // Анализ изображения еды
-          const bytes = await file.arrayBuffer()
+          const bytes = await file.bytes()
           const buffer = Buffer.from(bytes)
           const base64Image = buffer.toString('base64')
           

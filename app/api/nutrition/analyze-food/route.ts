@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No photo provided' }, { status: 400 })
     }
     
-    const buffer = Buffer.from(await foodPhoto.arrayBuffer())
+    // Используем стабильный API вместо экспериментального arrayBuffer()
+    const bytes = await foodPhoto.bytes()
+    const buffer = Buffer.from(bytes)
     const base64Image = buffer.toString('base64')
 
     // Используем централизованную функцию

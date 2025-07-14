@@ -40,6 +40,7 @@ export default function AddFoodPage() {
   // Состояния для модального окна
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<NutritionData | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null); // Новое состояние для ошибки
   const [uploadProgress, setUploadProgress] = useState(0);
 
   // Загрузка данных при монтировании компонента
@@ -139,6 +140,7 @@ export default function AddFoodPage() {
     setIsModalOpen(true);
     setLoading('gallery');
     setAnalysisResult(null);
+    setAnalysisError(null); // Сбрасываем предыдущую ошибку
 
     // Симуляция прогресса загрузки
     let progress = 0;
@@ -207,18 +209,18 @@ export default function AddFoodPage() {
           }
         });
       } else {
-        throw new Error(result.error)
+        throw new Error(result.error || 'Неизвестная ошибка анализа')
       }
     } catch (error) {
       console.error('Ошибка анализа фото:', error)
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Ошибка анализа. Попробуйте еще раз.')
-      } else {
-        alert('Ошибка анализа. Попробуйте еще раз.')
-      }
-      setIsModalOpen(false); // Закрываем окно при ошибке
+      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка. Попробуйте еще раз.';
+      setAnalysisError(errorMessage); // Устанавливаем сообщение об ошибке
+      
+      // Не закрываем окно, чтобы показать ошибку
+      // setIsModalOpen(false); 
     } finally {
        clearInterval(interval);
+       setUploadProgress(100); // Убедимся, что прогресс дошел до конца
        setTimeout(() => setLoading(null), 500); // Небольшая задержка перед скрытием лоадера
     }
   }
@@ -255,6 +257,7 @@ export default function AddFoodPage() {
     setIsModalOpen(true);
     setLoading('text');
     setAnalysisResult(null);
+    setAnalysisError(null); // Сбрасываем предыдущую ошибку
 
     // Симуляция прогресса для текстового анализа
     let progress = 0;
@@ -320,21 +323,16 @@ export default function AddFoodPage() {
           }
         });
       } else {
-        throw new Error(result.error)
+        throw new Error(result.error || 'Неизвестная ошибка анализа');
       }
     } catch (error) {
-      console.error('Ошибка анализа текста:', error)
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('Ошибка анализа. Попробуйте еще раз.')
-      } else {
-        alert('Ошибка анализа. Попробуйте еще раз.')
-      }
-      setIsModalOpen(false);
+      console.error('Ошибка анализа текста:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Произошла ошибка. Попробуйте еще раз.';
+      setAnalysisError(errorMessage); // Устанавливаем сообщение об ошибке
     } finally {
-      clearInterval(interval);
-      setTimeout(() => setLoading(null), 500);
+      setLoading(null);
     }
-  }
+  };
 
   const handleBarcodeScanner = () => {
     setLoading('scan')
@@ -507,7 +505,7 @@ export default function AddFoodPage() {
             <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-xl">
               <Utensils className="w-12 h-12 mx-auto text-gray-400 mb-2" />
               <p>Вы еще ничего не ели сегодня.</p>
-              <p className="text-sm text-gray-500">Добавьте свой первый прием пищи!</p>
+              <p className="text-sm text-gray-500">Добавьте данные о приемах пищи</p>
             </div>
           )}
         </div>
@@ -522,13 +520,16 @@ export default function AddFoodPage() {
         className="hidden"
       />
 
-      <AnalysisModal 
+      {/* Модальное окно */}
+      <AnalysisModal
         isOpen={isModalOpen}
         isLoading={loading === 'gallery' || loading === 'text'}
         analysisResult={analysisResult}
+        analysisError={analysisError} // Передаем ошибку
         onClose={() => {
-          setIsModalOpen(false);
-          setAnalysisResult(null);
+          setIsModalOpen(false)
+          setAnalysisResult(null)
+          setAnalysisError(null)
         }}
         uploadProgress={uploadProgress}
       />

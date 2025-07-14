@@ -10,11 +10,12 @@ interface AnalysisModalProps {
   isOpen: boolean;
   isLoading: boolean;
   analysisResult: NutritionData | null;
+  analysisError: string | null; // Добавлено свойство для ошибки
   onClose: () => void;
   uploadProgress: number;
 }
 
-const AnalysisModal: React.FC<AnalysisModalProps> = ({ isOpen, isLoading, analysisResult, onClose, uploadProgress }) => {
+const AnalysisModal: React.FC<AnalysisModalProps> = ({ isOpen, isLoading, analysisResult, analysisError, onClose, uploadProgress }) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -49,6 +50,18 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({ isOpen, isLoading, analys
                     />
                   </div>
                   <p className="text-orange-500 font-bold text-xl mt-4">{uploadProgress}%</p>
+                </div>
+              ) : analysisError ? ( // Если есть ошибка, показываем ее
+                <div className="flex flex-col items-center justify-center h-48 text-center">
+                  <UtensilsCrossed className="w-12 h-12 text-red-500 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Ошибка анализа</h3>
+                  <p className="text-sm text-red-600 dark:text-red-400 mb-6">{analysisError}</p>
+                  <button
+                    onClick={onClose}
+                    className="bg-orange-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition-colors"
+                  >
+                    Закрыть
+                  </button>
                 </div>
               ) : analysisResult && (
                 <div>

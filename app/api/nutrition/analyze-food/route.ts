@@ -32,8 +32,30 @@ export async function POST(req: NextRequest) {
     }
     
     // Используем стабильный API вместо экспериментального arrayBuffer()
-    const bytes = await foodPhoto.bytes()
-    const buffer = Buffer.from(bytes)
+    const stream = foodPhoto.stream()
+    const chunks: Uint8Array[] = []
+    const reader = stream.getReader()
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        chunks.push(value)
+      }
+    } finally {
+      reader.releaseLock()
+    }
+
+    // Объединяем chunks в один buffer
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
+    const uint8Array = new Uint8Array(totalLength)
+    let offset = 0
+    for (const chunk of chunks) {
+      uint8Array.set(chunk, offset)
+      offset += chunk.length
+    }
+
+    const buffer = Buffer.from(uint8Array)
     const base64Image = buffer.toString('base64')
 
     // Используем централизованную функцию

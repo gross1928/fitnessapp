@@ -154,8 +154,30 @@ export async function POST(request: NextRequest) {
       if (file) {
         if (file.type.startsWith('image/')) {
           // Анализ изображения еды
-          const bytes = await file.bytes()
-          const buffer = Buffer.from(bytes)
+          const stream = file.stream()
+          const chunks: Uint8Array[] = []
+          const reader = stream.getReader()
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) break
+              chunks.push(value)
+            }
+          } finally {
+            reader.releaseLock()
+          }
+
+          // Объединяем chunks в один buffer
+          const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
+          const uint8Array = new Uint8Array(totalLength)
+          let offset = 0
+          for (const chunk of chunks) {
+            uint8Array.set(chunk, offset)
+            offset += chunk.length
+          }
+
+          const buffer = Buffer.from(uint8Array)
           const base64Image = buffer.toString('base64')
           
           const foodAnalysis = await analyzeFoodImage(base64Image)

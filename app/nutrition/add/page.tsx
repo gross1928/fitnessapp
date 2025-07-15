@@ -581,14 +581,10 @@ export default function AddFoodPage() {
       {/* Модальное окно */}
       <AnalysisModal
         isOpen={isModalOpen}
-        isLoading={loading === 'gallery' || loading === 'text'}
+        isLoading={loading === 'analyzing'}
         analysisResult={analysisResult}
         analysisError={analysisError}
-        onClose={() => {
-          setIsModalOpen(false)
-          setAnalysisResult(null)
-          setAnalysisError(null)
-        }}
+        onClose={() => setIsModalOpen(false)}
         uploadProgress={uploadProgress}
         onSave={handleSaveMeal}
         onSendFeedback={handleSendFeedback}

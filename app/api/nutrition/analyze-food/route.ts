@@ -61,18 +61,41 @@ export async function POST(req: NextRequest) {
     // Используем централизованную функцию
     const analysisJson = await analyzeFoodImage(base64Image)
     
-    // Сохранение в базу данных
+    // Проверяем, что анализ прошел успешно
+    if (!analysisJson || !analysisJson.estimated_calories) {
+      throw new Error('Не удалось проанализировать изображение или получить данные о калориях')
+    }
+    
+    // Сначала создаем food_item
+    const { data: foodItem, error: foodItemError } = await supabase
+      .from('food_items')
+      .insert({
+        user_id: user.id,
+        name: analysisJson.detected_food,
+        calories_per_100g: Math.round(analysisJson.estimated_calories),
+        proteins_per_100g: analysisJson.estimated_nutrition.proteins,
+        fats_per_100g: analysisJson.estimated_nutrition.fats,
+        carbs_per_100g: analysisJson.estimated_nutrition.carbs
+      })
+      .select('id')
+      .single()
+
+    if (foodItemError) {
+      throw new Error(`Ошибка создания продукта: ${foodItemError.message}`)
+    }
+    
+    // Теперь создаем meal_entry
     const { data: mealEntry, error: insertError } = await supabase
       .from('meal_entries')
       .insert({
         user_id: user.id,
+        food_item_id: foodItem.id,
         meal_type: 'snack', // По умолчанию, можно дать пользователю выбор
-        food_name: analysisJson.detected_food,
-        calories: analysisJson.estimated_calories,
-        proteins: analysisJson.estimated_nutrition.proteins, // исправлено fat на proteins
-        fats: analysisJson.estimated_nutrition.fats,     // исправлено carbs на fats
-        carbs: analysisJson.estimated_nutrition.carbs,     // исправлено amount на carbs
         amount: 100, // Предполагаем 100г для анализа
+        calories: Math.round(analysisJson.estimated_calories),
+        proteins: analysisJson.estimated_nutrition.proteins,
+        fats: analysisJson.estimated_nutrition.fats,
+        carbs: analysisJson.estimated_nutrition.carbs
       })
       .select('id')
       .single()
@@ -97,7 +120,24 @@ export async function POST(req: NextRequest) {
       console.error('Failed to save analysis details:', analysisInsertError)
     }
 
-    return NextResponse.json({ success: true, data: { analysis: analysisJson } })
+    // Преобразуем OpenAIFoodAnalysis в NutritionData для клиента
+    const nutritionData = {
+      dish_name: analysisJson.detected_food,
+      total_nutrition: {
+        calories: analysisJson.estimated_calories,
+        proteins: analysisJson.estimated_nutrition.proteins,
+        fats: analysisJson.estimated_nutrition.fats,
+        carbs: analysisJson.estimated_nutrition.carbs
+      },
+      ingredients: [
+        {
+          name: analysisJson.detected_food,
+          weight_grams: 100 // Примерный вес для анализа
+        }
+      ]
+    }
+
+    return NextResponse.json({ success: true, data: { analysis: nutritionData } })
 
   } catch (error) {
     console.error('[Analyze Food API Error]', error)

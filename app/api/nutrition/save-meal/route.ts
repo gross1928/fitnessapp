@@ -30,13 +30,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
     }
 
-    // 2. Сохранить основную запись о приеме пищи
+    // Рассчитываем КБЖУ на 100г
+    const ratio = 100 / (amount || 100);
+
+    // 2. Найти или создать запись в food_items
+    const { data: foodItem, error: foodItemError } = await supabase
+      .from('food_items')
+      .upsert(
+        { 
+          name: food_name,
+          calories_per_100g: Math.round(calories * ratio),
+          proteins_per_100g: Math.round(proteins * ratio),
+          fats_per_100g: Math.round(fats * ratio),
+          carbs_per_100g: Math.round(carbs * ratio),
+          user_id: user.id // Указываем, кто добавил продукт
+        },
+        { onConflict: 'name, user_id', ignoreDuplicates: false }
+      )
+      .select('id')
+      .single()
+
+    if (foodItemError || !foodItem) {
+        console.error('Database upsert error in food_items:', foodItemError);
+        throw new Error(`Database upsert error in food_items: ${foodItemError?.message}`)
+    }
+
+
+    // 3. Сохранить основную запись о приеме пищи
     const { data: mealEntry, error: insertError } = await supabase
       .from('meal_entries')
       .insert({
         user_id: user.id,
         meal_type: 'snack', // Можно сделать это поле настраиваемым в будущем
-        food_name: food_name,
+        food_item_id: foodItem.id, // Используем ID из food_items
         calories: calories,
         proteins: proteins,
         fats: fats,
@@ -51,7 +77,7 @@ export async function POST(req: NextRequest) {
       throw new Error(`Database insert error: ${insertError.message}`)
     }
     
-    // 3. Сохранить детальный анализ
+    // 4. Сохранить детальный анализ
     const { error: analysisInsertError } = await supabase
       .from('food_analysis')
       .insert({

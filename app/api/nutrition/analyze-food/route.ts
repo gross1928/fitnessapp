@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       throw new Error('Не удалось проанализировать изображение или получить данные о калориях')
     }
     
-    // Сначала создаем food_item
+    // Сначала создаем food_item (обязательно для foreign key)
     const { data: foodItem, error: foodItemError } = await supabase
       .from('food_items')
       .insert({
@@ -83,13 +83,14 @@ export async function POST(req: NextRequest) {
     if (foodItemError) {
       throw new Error(`Ошибка создания продукта: ${foodItemError.message}`)
     }
-    
-    // Теперь создаем meal_entry
+
+    // Создаем meal_entry с обоими полями для совместимости
     const { data: mealEntry, error: insertError } = await supabase
       .from('meal_entries')
       .insert({
         user_id: user.id,
-        food_item_id: foodItem.id,
+        food_item_id: foodItem.id, // Обязательное поле
+        food_name: analysisJson.detected_food, // Дополнительное поле для удобства
         meal_type: 'snack', // По умолчанию, можно дать пользователю выбор
         amount: 100, // Предполагаем 100г для анализа
         calories: Math.round(analysisJson.estimated_calories),

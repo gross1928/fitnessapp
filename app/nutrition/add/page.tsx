@@ -136,13 +136,19 @@ export default function AddFoodPage() {
       
       if (result.success) {
         console.log('Прием пищи успешно сохранен');
-        loadTodayHistory(); // Обновляем историю
         
-        // Показываем уведомление об успехе
+        // Убираем уведомление, чтобы избежать дублирования
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-          window.Telegram.WebApp.showAlert('✅ Прием пищи сохранен!');
         }
+        
+        // Закрываем модальное окно
+        setIsModalOpen(false);
+        setAnalysisResult(null);
+        
+        // Перенаправляем на главную для обновления данных
+        router.push('/');
+
       } else {
         throw new Error(result.error || 'Ошибка сохранения');
       }

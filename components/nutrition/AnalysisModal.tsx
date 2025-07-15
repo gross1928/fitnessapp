@@ -111,7 +111,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center justify-center">
                       <UtensilsCrossed className="mr-3 text-orange-500" />
-                      КБЖУ Блюда
+                      КБЖУ Анализ Блюда
                     </h2>
                     <p className="text-center text-lg font-medium text-gray-700 dark:text-gray-300 mb-6">{analysisResult.dish_name}</p>
 

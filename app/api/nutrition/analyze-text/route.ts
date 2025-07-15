@@ -101,17 +101,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Преобразуем ответ OpenAI в наш стандартный формат NutritionData
+    const nutritionData = {
+      dish_name: analysis.detected_food,
+      total_nutrition: {
+        calories: analysis.estimated_calories,
+        proteins: analysis.estimated_nutrition.proteins,
+        fats: analysis.estimated_nutrition.fats,
+        carbs: analysis.estimated_nutrition.carbs,
+      },
+      // OpenAI текстовый анализ не всегда возвращает ингредиенты, поэтому нужна проверка
+      ingredients: [{ name: analysis.detected_food, weight_grams: 100 }], // Упрощаем для консистентности
+    };
+
     return NextResponse.json({
       success: true,
-      data: {
-        analysis,
-        originalDescription: foodDescription,
-        suggestions: [
-          'Рекомендуется указать точный вес порции для более точного расчета',
-          'Уточните способ приготовления, если это влияет на калорийность',
-          ...analysis.health_notes || []
-        ]
-      },
+      data: nutritionData,
       message: 'Анализ описания завершен'
     })
 

@@ -28,7 +28,8 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
   onSendFeedback
 }) => {
   const [feedback, setFeedback] = useState('');
-  const [showFeedback, setShowFeedback] = useState(false);
+  // Устанавливаем showFeedback в true по умолчанию
+  const [showFeedback, setShowFeedback] = useState(true);
 
   const handleSave = () => {
     if (analysisResult && onSave) {
@@ -145,49 +146,22 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center">
-                       <List className="mr-2 text-orange-500"/>
-                       Состав
-                     </h3>
-                     <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                      {analysisResult.ingredients.map((ing, index) => (
-                        <li key={index} className="flex justify-between">
-                          <span>{ing.name}</span>
-                          <span className="font-medium">{ing.weight_grams} г</span>
-                        </li>
-                      ))}
-                     </ul>
-                  </div>
+                  {/* Убираем блок Состав */}
 
                   {/* Поле для комментариев */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() => setShowFeedback(!showFeedback)}
-                      className="flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors mb-3"
-                    >
-                      <MessageSquare className="mr-2" size={16} />
-                      <span className="text-sm">Есть уточнения к анализу?</span>
-                    </button>
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center">
+                      <MessageSquare className="mr-2 text-orange-500" size={20} />
+                      Есть уточнения?
+                    </h3>
                     
-                    <AnimatePresence>
-                      {showFeedback && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <textarea
-                            value={feedback}
-                            onChange={(e) => setFeedback(e.target.value)}
-                            placeholder="Например: 'Добавь острый соус 20г' или 'Это была большая порция, увеличь в 1.5 раза'"
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                            rows={3}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <textarea
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      placeholder="Например: 'Добавь острый соус 20г' или 'Это была большая порция, увеличь в 1.5 раза'"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      rows={3}
+                    />
                   </div>
                 </div>
               </div>
@@ -196,13 +170,28 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
             {/* Кнопки */}
             {analysisResult && !isLoading && !analysisError && (
               <div className="flex-shrink-0 p-6 border-t border-gray-200 dark:border-gray-700">
-                <button
-                  onClick={handleSave}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
-                >
-                  <Save className="mr-2" size={18} />
-                  Сохранить
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleSave}
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                  >
+                    <Save className="mr-2" size={18} />
+                    Сохранить
+                  </button>
+                  
+                  <button
+                    onClick={handleSendFeedback}
+                    disabled={!feedback.trim()}
+                    className={`flex-1 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center ${
+                      !feedback.trim()
+                        ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                    }`}
+                  >
+                    <Send className="mr-2" size={18} />
+                    Отправить
+                  </button>
+                </div>
               </div>
             )}
           </motion.div>

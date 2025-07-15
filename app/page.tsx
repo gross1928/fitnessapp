@@ -183,15 +183,6 @@ export default function DashboardPage() {
     router.push('/nutrition/add')
   }
 
-  const handleAddWeight = () => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
-      window.Telegram.WebApp.showAlert('Функция "Взвеситься" скоро будет доступна! ⚖️')
-    } else {
-      alert('Функция "Взвеситься" скоро будет доступна! ⚖️')
-    }
-  }
-
   const handleUploadAnalysis = () => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy')
@@ -205,15 +196,6 @@ export default function DashboardPage() {
       router.push('/onboarding') // Пока перенаправляем на онбординг
     } else {
       router.push('/onboarding')
-    }
-  }
-
-  const handleHistory = () => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
-      window.Telegram.WebApp.showAlert('Функция "История" скоро будет доступна! 📅')
-    } else {
-      alert('Функция "История" скоро будет доступна! 📅')
     }
   }
 
@@ -619,14 +601,6 @@ export default function DashboardPage() {
               />
               
               <QuickActionButton
-                icon={<Weight className="w-7 h-7" />}
-                label="Взвеситься"
-                onClick={handleAddWeight}
-                color="bg-gradient-to-br from-green-400 to-emerald-500"
-                textColor="text-white"
-              />
-              
-              <QuickActionButton
                 icon={<FileText className="w-7 h-7" />}
                 label="Загрузить анализы"
                 onClick={handleUploadAnalysis}
@@ -639,14 +613,6 @@ export default function DashboardPage() {
                 label="Мои цели"
                 onClick={handleGoals}
                 color="bg-gradient-to-br from-pink-400 to-rose-500"
-                textColor="text-white"
-              />
-              
-              <QuickActionButton
-                icon={<Calendar className="w-7 h-7" />}
-                label="История"
-                onClick={handleHistory}
-                color="bg-gradient-to-br from-yellow-400 to-amber-500"
                 textColor="text-white"
               />
             </div>

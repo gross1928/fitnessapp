@@ -137,7 +137,10 @@ export default function AddFoodPage() {
       if (result.success) {
         console.log('Прием пищи успешно сохранен');
         
-        // Убираем уведомление, чтобы избежать дублирования
+        // Снова загружаем историю, чтобы она сразу обновилась
+        loadTodayHistory(); 
+        
+        // Показываем короткую тактильную обратную связь
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         }
@@ -146,9 +149,6 @@ export default function AddFoodPage() {
         setIsModalOpen(false);
         setAnalysisResult(null);
         
-        // Перенаправляем на главную для обновления данных
-        router.push('/');
-
       } else {
         throw new Error(result.error || 'Ошибка сохранения');
       }
@@ -551,6 +551,7 @@ export default function AddFoodPage() {
       <AnalysisModal
         isOpen={isModalOpen}
         isLoading={loading === 'gallery' || loading === 'text'}
+        loadingText={loading === 'text' ? 'Считаю калории...' : 'Анализ изображения...'}
         analysisResult={analysisResult}
         analysisError={analysisError}
         onClose={() => {

@@ -9,6 +9,7 @@ import { NutritionData } from '@/types';
 interface AnalysisModalProps {
   isOpen: boolean;
   isLoading: boolean;
+  loadingText?: string;
   analysisResult: NutritionData | null;
   analysisError: string | null;
   onClose: () => void;
@@ -20,6 +21,7 @@ interface AnalysisModalProps {
 const AnalysisModal: React.FC<AnalysisModalProps> = ({ 
   isOpen, 
   isLoading, 
+  loadingText = 'Анализ...',
   analysisResult, 
   analysisError, 
   onClose, 
@@ -77,7 +79,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-48">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Анализ изображения...</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">{loadingText}</h3>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
                     <motion.div
                       className="bg-orange-500 h-2.5 rounded-full"

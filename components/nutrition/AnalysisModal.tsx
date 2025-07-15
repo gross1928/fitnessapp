@@ -44,8 +44,6 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
     if (analysisResult && onSendFeedback && feedback.trim()) {
       onSendFeedback(analysisResult, feedback.trim());
       setFeedback('');
-      setShowFeedback(false);
-      onClose();
     }
   };
 

@@ -159,62 +159,23 @@ export default function AddFoodPage() {
 
   // Функция для отправки комментария в чат
   const handleSendFeedback = async (data: NutritionData, feedback: string) => {
-    try {
-      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
-      
-      if (!telegramUser) {
-        throw new Error("Пользователь Telegram не определен.");
-      }
+    // Формируем подробный запрос для повторного анализа
+    const message = `Проанализируй еще раз это блюдо с учетом моих уточнений:
+    
+    Блюдо: ${data.dish_name}
+    
+    Текущий анализ:
+    - Калории: ${data.total_nutrition.calories} ккал
+    - Белки: ${data.total_nutrition.proteins} г
+    - Жиры: ${data.total_nutrition.fats} г
+    - Углеводы: ${data.total_nutrition.carbs} г
+    
+    Мои уточнения: ${feedback}
+    
+    Пересчитай КБЖУ с учетом этих дополнений.`;
 
-      // Формируем сообщение с анализом и комментарием
-      const message = `Проанализируй еще раз это блюдо с учетом моих уточнений:
-
-🍽️ **Блюдо:** ${data.dish_name}
-
-📊 **Текущий анализ:**
-• Калории: ${data.total_nutrition.calories} ккал
-• Белки: ${data.total_nutrition.proteins} г
-• Жиры: ${data.total_nutrition.fats} г
-• Углеводы: ${data.total_nutrition.carbs} г
-
-✏️ **Мои уточнения:** ${feedback}
-
-Пересчитай КБЖУ с учетом этих дополнений и измени если нужно.`;
-
-      const formData = new FormData();
-      formData.append('content', message);
-      formData.append('message_type', 'text');
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'x-telegram-user-id': telegramUser.id.toString(),
-        },
-        body: formData,
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        console.log('Комментарий отправлен в чат');
-        
-        // Показываем уведомление об успехе
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-          window.Telegram.WebApp.showAlert('💬 Сообщение отправлено в чат с AI! Проверьте раздел "Чат" для получения обновленного анализа.');
-        }
-      } else {
-        throw new Error(result.error || 'Ошибка отправки');
-      }
-    } catch (error) {
-      console.error('Ошибка отправки комментария:', error);
-      
-      // Показываем ошибку
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-        window.Telegram.WebApp.showAlert('❌ Ошибка отправки. Попробуйте еще раз.');
-      }
-    }
+    // Вызываем функцию анализа текста с новым запросом
+    await analyzeTextInput(message);
   };
 
   const handleCameraPhoto = async () => {

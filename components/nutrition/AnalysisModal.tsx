@@ -68,145 +68,143 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md border-4 border-orange-500 max-h-[90vh] overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md border-4 border-orange-500 max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col h-full">
-              <div className="p-6 relative flex-shrink-0">
-                <button onClick={handleClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
-                  <X size={24} />
-                </button>
+            <div className="flex-shrink-0 p-6 relative">
+              <button onClick={handleClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={24} />
+              </button>
 
-                {isLoading ? (
-                  <div className="flex flex-col items-center justify-center h-48">
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Анализ изображения...</h3>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                      <motion.div
-                        className="bg-orange-500 h-2.5 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${uploadProgress}%` }}
-                        transition={{ duration: 0.5, ease: "linear" }}
-                      />
-                    </div>
-                    <p className="text-orange-500 font-bold text-xl mt-4">{uploadProgress}%</p>
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center h-48">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Анализ изображения...</h3>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <motion.div
+                      className="bg-orange-500 h-2.5 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${uploadProgress}%` }}
+                      transition={{ duration: 0.5, ease: "linear" }}
+                    />
                   </div>
-                ) : analysisError ? (
-                  <div className="flex flex-col items-center justify-center h-48 text-center">
-                    <UtensilsCrossed className="w-12 h-12 text-red-500 mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Ошибка анализа</h3>
-                    <p className="text-sm text-red-600 dark:text-red-400 mb-6">{analysisError}</p>
-                    <button
-                      onClick={handleClose}
-                      className="bg-orange-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition-colors"
-                    >
-                      Закрыть
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Скроллируемый контент */}
-              {analysisResult && !isLoading && !analysisError && (
-                <div className="flex-1 overflow-y-auto px-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center justify-center">
-                      <UtensilsCrossed className="mr-3 text-orange-500" />
-                      КБЖУ Блюда
-                    </h2>
-                    <p className="text-center text-lg font-medium text-gray-700 dark:text-gray-300 mb-6">{analysisResult.dish_name}</p>
-
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                        <div className="flex items-center text-gray-800 dark:text-white font-semibold">
-                          <BarChart className="mr-3 text-orange-500" />
-                          <span>Калории</span>
-                        </div>
-                        <span className="font-bold text-lg">{analysisResult.total_nutrition.calories} ккал</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 rounded-lg">
-                        <div className="flex items-center text-gray-800 dark:text-white">
-                          <Beef className="mr-3 text-orange-500" />
-                          <span>Белки</span>
-                        </div>
-                        <span className="font-bold text-lg">{analysisResult.total_nutrition.proteins} г</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                        <div className="flex items-center text-gray-800 dark:text-white">
-                          <Droplets className="mr-3 text-orange-500" />
-                          <span>Жиры</span>
-                        </div>
-                        <span className="font-bold text-lg">{analysisResult.total_nutrition.fats} г</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2 rounded-lg">
-                        <div className="flex items-center text-gray-800 dark:text-white">
-                          <Wheat className="mr-3 text-orange-500" />
-                          <span>Углеводы</span>
-                        </div>
-                        <span className="font-bold text-lg">{analysisResult.total_nutrition.carbs} г</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                       <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center">
-                         <List className="mr-2 text-orange-500"/>
-                         Состав
-                       </h3>
-                       <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                        {analysisResult.ingredients.map((ing, index) => (
-                          <li key={index} className="flex justify-between">
-                            <span>{ing.name}</span>
-                            <span className="font-medium">{ing.weight_grams} г</span>
-                          </li>
-                        ))}
-                       </ul>
-                    </div>
-
-                    {/* Поле для комментариев */}
-                    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() => setShowFeedback(!showFeedback)}
-                        className="flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors mb-3"
-                      >
-                        <MessageSquare className="mr-2" size={16} />
-                        <span className="text-sm">Есть уточнения к анализу?</span>
-                      </button>
-                      
-                      <AnimatePresence>
-                        {showFeedback && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <textarea
-                              value={feedback}
-                              onChange={(e) => setFeedback(e.target.value)}
-                              placeholder="Например: 'Добавь острый соус 20г' или 'Это была большая порция, увеличь в 1.5 раза'"
-                              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                              rows={3}
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
+                  <p className="text-orange-500 font-bold text-xl mt-4">{uploadProgress}%</p>
                 </div>
-              )}
-
-              {/* Кнопки */}
-              {analysisResult && !isLoading && !analysisError && (
-                <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+              ) : analysisError ? (
+                <div className="flex flex-col items-center justify-center h-48 text-center">
+                  <UtensilsCrossed className="w-12 h-12 text-red-500 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Ошибка анализа</h3>
+                  <p className="text-sm text-red-600 dark:text-red-400 mb-6">{analysisError}</p>
                   <button
-                    onClick={handleSave}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                    onClick={handleClose}
+                    className="bg-orange-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-600 transition-colors"
                   >
-                    <Save className="mr-2" size={18} />
-                    Сохранить
+                    Закрыть
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
+
+            {/* Скроллируемый контент */}
+            {analysisResult && !isLoading && !analysisError && (
+              <div className="flex-1 overflow-y-auto px-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center justify-center">
+                    <UtensilsCrossed className="mr-3 text-orange-500" />
+                    КБЖУ Блюда
+                  </h2>
+                  <p className="text-center text-lg font-medium text-gray-700 dark:text-gray-300 mb-6">{analysisResult.dish_name}</p>
+
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                      <div className="flex items-center text-gray-800 dark:text-white font-semibold">
+                        <BarChart className="mr-3 text-orange-500" />
+                        <span>Калории</span>
+                      </div>
+                      <span className="font-bold text-lg">{analysisResult.total_nutrition.calories} ккал</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg">
+                      <div className="flex items-center text-gray-800 dark:text-white">
+                        <Beef className="mr-3 text-orange-500" />
+                        <span>Белки</span>
+                      </div>
+                      <span className="font-bold text-lg">{analysisResult.total_nutrition.proteins} г</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                      <div className="flex items-center text-gray-800 dark:text-white">
+                        <Droplets className="mr-3 text-orange-500" />
+                        <span>Жиры</span>
+                      </div>
+                      <span className="font-bold text-lg">{analysisResult.total_nutrition.fats} г</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg">
+                      <div className="flex items-center text-gray-800 dark:text-white">
+                        <Wheat className="mr-3 text-orange-500" />
+                        <span>Углеводы</span>
+                      </div>
+                      <span className="font-bold text-lg">{analysisResult.total_nutrition.carbs} г</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center">
+                       <List className="mr-2 text-orange-500"/>
+                       Состав
+                     </h3>
+                     <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                      {analysisResult.ingredients.map((ing, index) => (
+                        <li key={index} className="flex justify-between">
+                          <span>{ing.name}</span>
+                          <span className="font-medium">{ing.weight_grams} г</span>
+                        </li>
+                      ))}
+                     </ul>
+                  </div>
+
+                  {/* Поле для комментариев */}
+                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => setShowFeedback(!showFeedback)}
+                      className="flex items-center text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors mb-3"
+                    >
+                      <MessageSquare className="mr-2" size={16} />
+                      <span className="text-sm">Есть уточнения к анализу?</span>
+                    </button>
+                    
+                    <AnimatePresence>
+                      {showFeedback && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <textarea
+                            value={feedback}
+                            onChange={(e) => setFeedback(e.target.value)}
+                            placeholder="Например: 'Добавь острый соус 20г' или 'Это была большая порция, увеличь в 1.5 раза'"
+                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            rows={3}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Кнопки */}
+            {analysisResult && !isLoading && !analysisError && (
+              <div className="flex-shrink-0 p-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={handleSave}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                >
+                  <Save className="mr-2" size={18} />
+                  Сохранить
+                </button>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}

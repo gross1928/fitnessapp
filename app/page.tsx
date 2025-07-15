@@ -117,10 +117,54 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [waterIntake, setWaterIntake] = useState(0)
+  const [nutritionData, setNutritionData] = useState<any>(null) // Состояние для КБЖУ
+
+  const greeting = () => {
+    const hour = currentTime.getHours()
+    if (hour < 6) return 'Доброй ночи'
+    if (hour < 12) return 'Доброе утро'
+    if (hour < 18) return 'Добрый день'
+    return 'Добрый вечер'
+  }
+
+  // Функция загрузки данных
+  const loadDashboardData = async () => {
+    const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    if (!telegramId) return;
+
+    try {
+      // Загрузка КБЖУ
+      const nutritionRes = await fetch(`/api/nutrition/stats?userId=${telegramId}`);
+      if (nutritionRes.ok) {
+        const data = await nutritionRes.json();
+        setNutritionData(data.data);
+      }
+
+      // Загрузка воды
+      const waterRes = await fetch(`/api/nutrition/water?userId=${telegramId}`);
+      if(waterRes.ok) {
+        const data = await waterRes.json();
+        setWaterIntake(data.data.totalToday);
+      }
+    } catch (err) {
+      console.error("Ошибка загрузки данных дашборда", err);
+    }
+  };
   
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000)
-    return () => clearInterval(timer)
+    
+    const handleFocus = () => {
+      console.log("Страница в фокусе, обновляем данные...");
+      loadDashboardData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', handleFocus);
+    }
   }, [])
 
   // Функции для быстрых действий
@@ -297,6 +341,9 @@ export default function DashboardPage() {
         // Регистрируем пользователя
         await registerUser(telegramUser)
         
+        // После успешной инициализации загружаем данные
+        await loadDashboardData();
+
       } catch (error) {
         console.error('💥 Критическая ошибка инициализации:', error)
         setError(`Критическая ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
@@ -479,8 +526,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Калории"
-            value={todayData.calories.current}
-            target={todayData.calories.target}
+            value={nutritionData?.total_calories || 0}
+            target={user?.daily_calorie_target || 2500}
             unit="ккал"
             icon={<Apple className="w-6 h-6" />}
             color="bg-gradient-to-br from-orange-500 to-red-600 shadow-orange-500/30"
@@ -500,8 +547,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-3 gap-3">
           <MetricCard
             title="Белки"
-            value={todayData.proteins.current}
-            target={todayData.proteins.target}
+            value={nutritionData?.total_proteins || 0}
+            target={user?.daily_protein_target || 122}
             unit="г"
             icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">Б</div>}
             color="bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-400/30"
@@ -509,8 +556,8 @@ export default function DashboardPage() {
           
           <MetricCard
             title="Жиры"
-            value={todayData.fats.current}
-            target={todayData.fats.target}
+            value={nutritionData?.total_fats || 0}
+            target={user?.daily_fat_target || 69}
             unit="г"
             icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-yellow-600 font-bold text-sm">Ж</div>}
             color="bg-gradient-to-br from-yellow-400 to-amber-500 shadow-yellow-400/30"
@@ -518,8 +565,8 @@ export default function DashboardPage() {
           
           <MetricCard
             title="Углеводы"
-            value={todayData.carbs.current}
-            target={todayData.carbs.target}
+            value={nutritionData?.total_carbs || 0}
+            target={user?.daily_carb_target || 347}
             unit="г"
             icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-green-600 font-bold text-sm">У</div>}
             color="bg-gradient-to-br from-green-400 to-emerald-600 shadow-green-400/30"

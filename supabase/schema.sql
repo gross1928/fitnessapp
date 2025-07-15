@@ -139,7 +139,7 @@ CREATE TRIGGER update_users_updated_at
 
 -- Row Level Security (RLS) политики
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE food_items ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE food_items ENABLE ROW LEVEL SECURITY; -- Временно отключаем RLS
 ALTER TABLE meal_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE water_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weight_entries ENABLE ROW LEVEL SECURITY;
@@ -157,8 +157,10 @@ CREATE POLICY "Users can insert own profile" ON users
     FOR INSERT WITH CHECK (telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint);
 
 -- Политики для остальных таблиц (доступ только к своим данным)
+/* -- Временно отключаем RLS
 CREATE POLICY "Users own data" ON food_items
     FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));
+*/
 
 CREATE POLICY "Users own data" ON meal_entries
     FOR ALL USING (user_id = (SELECT id FROM users WHERE telegram_id = (current_setting('request.jwt.claims', true)::jsonb ->> 'telegram_id')::bigint));

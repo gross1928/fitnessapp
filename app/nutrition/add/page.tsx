@@ -252,7 +252,8 @@ export default function AddFoodPage() {
       setUploadProgress(100);
 
       if (result.success) {
-        const analysis: NutritionData = result.data.analysis;
+        // Проверяем оба возможных формата ответа
+        const analysis: NutritionData = result.data.analysis?.dish_name ? result.data.analysis : result.data;
         setAnalysisResult(analysis);
         // Убираем автоматическое сохранение - теперь пользователь выбирает сам
       } else {
@@ -338,7 +339,8 @@ export default function AddFoodPage() {
       setUploadProgress(100);
 
       if (result.success) {
-        const analysis: NutritionData = result.data.analysis;
+        // Проверяем оба возможных формата ответа
+        const analysis: NutritionData = result.data.analysis?.dish_name ? result.data.analysis : result.data;
         setAnalysisResult(analysis);
         // Убираем автоматическое сохранение - теперь пользователь выбирает сам
       } else {

@@ -197,40 +197,13 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
               {/* Кнопки */}
               {analysisResult && !isLoading && !analysisError && (
                 <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={handleSave}
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
-                    >
-                      <Save className="mr-2" size={18} />
-                      Сохранить
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        if (!showFeedback) {
-                          setShowFeedback(true);
-                        } else if (feedback.trim()) {
-                          handleSendFeedback();
-                        }
-                      }}
-                      disabled={showFeedback && !feedback.trim()}
-                      className={`flex-1 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center ${
-                        showFeedback && !feedback.trim()
-                          ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                          : 'bg-orange-500 hover:bg-orange-600 text-white'
-                      }`}
-                    >
-                      <Send className="mr-2" size={18} />
-                      {showFeedback ? 'Отправить' : 'Уточнить'}
-                    </button>
-                  </div>
-                  
-                  {showFeedback && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                      AI пересчитает КБЖУ с учетом ваших уточнений
-                    </p>
-                  )}
+                  <button
+                    onClick={handleSave}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                  >
+                    <Save className="mr-2" size={18} />
+                    Сохранить
+                  </button>
                 </div>
               )}
             </div>

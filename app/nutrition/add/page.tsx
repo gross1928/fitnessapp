@@ -102,6 +102,121 @@ export default function AddFoodPage() {
     }
   }
 
+  // Функция для сохранения анализа
+  const handleSaveMeal = async (data: NutritionData) => {
+    try {
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
+      
+      if (!telegramUser) {
+        throw new Error("Пользователь Telegram не определен.");
+      }
+
+      const totalWeight = Array.isArray(data.ingredients) 
+        ? data.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0)
+        : 100;
+
+      const response = await fetch('/api/nutrition/save-meal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-telegram-user-id': telegramUser.id.toString(),
+        },
+        body: JSON.stringify({
+          food_name: data.dish_name,
+          calories: data.total_nutrition.calories,
+          proteins: data.total_nutrition.proteins,
+          fats: data.total_nutrition.fats,
+          carbs: data.total_nutrition.carbs,
+          amount: totalWeight,
+          raw_analysis: data,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('Прием пищи успешно сохранен');
+        loadTodayHistory(); // Обновляем историю
+        
+        // Показываем уведомление об успехе
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          window.Telegram.WebApp.showAlert('✅ Прием пищи сохранен!');
+        }
+      } else {
+        throw new Error(result.error || 'Ошибка сохранения');
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения приема пищи:', error);
+      
+      // Показываем ошибку
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+        window.Telegram.WebApp.showAlert('❌ Ошибка сохранения. Попробуйте еще раз.');
+      }
+    }
+  };
+
+  // Функция для отправки комментария в чат
+  const handleSendFeedback = async (data: NutritionData, feedback: string) => {
+    try {
+      const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
+      
+      if (!telegramUser) {
+        throw new Error("Пользователь Telegram не определен.");
+      }
+
+      // Формируем сообщение с анализом и комментарием
+      const message = `Проанализируй еще раз это блюдо с учетом моих уточнений:
+
+🍽️ **Блюдо:** ${data.dish_name}
+
+📊 **Текущий анализ:**
+• Калории: ${data.total_nutrition.calories} ккал
+• Белки: ${data.total_nutrition.proteins} г
+• Жиры: ${data.total_nutrition.fats} г
+• Углеводы: ${data.total_nutrition.carbs} г
+
+✏️ **Мои уточнения:** ${feedback}
+
+Пересчитай КБЖУ с учетом этих дополнений и измени если нужно.`;
+
+      const formData = new FormData();
+      formData.append('content', message);
+      formData.append('message_type', 'text');
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'x-telegram-user-id': telegramUser.id.toString(),
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('Комментарий отправлен в чат');
+        
+        // Показываем уведомление об успехе
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+          window.Telegram.WebApp.showAlert('💬 Сообщение отправлено в чат с AI! Проверьте раздел "Чат" для получения обновленного анализа.');
+        }
+      } else {
+        throw new Error(result.error || 'Ошибка отправки');
+      }
+    } catch (error) {
+      console.error('Ошибка отправки комментария:', error);
+      
+      // Показываем ошибку
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+        window.Telegram.WebApp.showAlert('❌ Ошибка отправки. Попробуйте еще раз.');
+      }
+    }
+  };
+
   const handleCameraPhoto = async () => {
     setLoading('camera')
     
@@ -178,38 +293,7 @@ export default function AddFoodPage() {
       if (result.success) {
         const analysis: NutritionData = result.data.analysis;
         setAnalysisResult(analysis);
-        
-        // Обновленная логика сохранения с проверкой
-        const totalWeight = Array.isArray(analysis.ingredients) 
-          ? analysis.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0)
-          : 0;
-        
-        // Отправляем данные для сохранения в фоне, не блокируя UI
-        fetch('/api/nutrition/save-meal', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-telegram-user-id': telegramUser.id.toString(),
-          },
-          body: JSON.stringify({
-            food_name: analysis.dish_name,
-            calories: analysis.total_nutrition.calories,
-            proteins: analysis.total_nutrition.proteins,
-            fats: analysis.total_nutrition.fats,
-            carbs: analysis.total_nutrition.carbs,
-            amount: totalWeight > 0 ? totalWeight : 100, // Используем суммарный вес или 100г по умолчанию
-            raw_analysis: analysis, // Сохраняем полный анализ
-          }),
-        })
-        .then(res => res.json())
-        .then(saveResult => {
-          if (saveResult.success) {
-            console.log('Прием пищи успешно сохранен');
-            loadTodayHistory(); // Обновляем историю на странице
-          } else {
-            console.error('Ошибка сохранения приема пищи:', saveResult.error);
-          }
-        });
+        // Убираем автоматическое сохранение - теперь пользователь выбирает сам
       } else {
         throw new Error(result.error || 'Неизвестная ошибка анализа')
       }
@@ -295,35 +379,7 @@ export default function AddFoodPage() {
       if (result.success) {
         const analysis: NutritionData = result.data.analysis;
         setAnalysisResult(analysis);
-
-        // Такая же обновленная логика сохранения
-        const totalWeight = analysis.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0);
-
-        fetch('/api/nutrition/save-meal', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-telegram-user-id': telegramUser.id.toString(),
-          },
-          body: JSON.stringify({
-            food_name: analysis.dish_name,
-            calories: analysis.total_nutrition.calories,
-            proteins: analysis.total_nutrition.proteins,
-            fats: analysis.total_nutrition.fats,
-            carbs: analysis.total_nutrition.carbs,
-            amount: totalWeight > 0 ? totalWeight : 100,
-            raw_analysis: analysis,
-          }),
-        })
-        .then(res => res.json())
-        .then(saveResult => {
-          if (saveResult.success) {
-            console.log('Прием пищи успешно сохранен');
-            loadTodayHistory();
-          } else {
-            console.error('Ошибка сохранения приема пищи:', saveResult.error);
-          }
-        });
+        // Убираем автоматическое сохранение - теперь пользователь выбирает сам
       } else {
         throw new Error(result.error || 'Неизвестная ошибка анализа');
       }
@@ -527,13 +583,15 @@ export default function AddFoodPage() {
         isOpen={isModalOpen}
         isLoading={loading === 'gallery' || loading === 'text'}
         analysisResult={analysisResult}
-        analysisError={analysisError} // Передаем ошибку
+        analysisError={analysisError}
         onClose={() => {
           setIsModalOpen(false)
           setAnalysisResult(null)
           setAnalysisError(null)
         }}
         uploadProgress={uploadProgress}
+        onSave={handleSaveMeal}
+        onSendFeedback={handleSendFeedback}
       />
     </div>
   )

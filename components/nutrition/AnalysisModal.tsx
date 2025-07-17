@@ -33,6 +33,8 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
   // Устанавливаем showFeedback в true по умолчанию
   const [showFeedback, setShowFeedback] = useState(true);
 
+  const totalWeight = analysisResult?.ingredients.reduce((sum, ing) => sum + ing.weight_grams, 0) || 0;
+
   const handleSave = () => {
     if (analysisResult && onSave) {
       onSave(analysisResult);
@@ -113,7 +115,10 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     <UtensilsCrossed className="mr-3 text-orange-500" />
                     КБЖУ Блюда
                   </h2>
-                  <p className="text-center text-lg font-medium text-gray-700 dark:text-gray-300 mb-6">{analysisResult.dish_name}</p>
+                  <p className="text-center text-lg font-medium text-gray-700 dark:text-gray-300">{analysisResult.dish_name}</p>
+                  <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-6">
+                    Общий вес: {totalWeight} г
+                  </p>
 
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">

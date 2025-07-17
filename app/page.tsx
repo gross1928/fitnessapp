@@ -556,21 +556,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Other metrics */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <MetricCard
             title="Текущий вес"
             value={todayData.weight}
             unit="кг"
             icon={<Weight className="w-6 h-6" />}
             color="bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30"
-          />
-          
-          <MetricCard
-            title="Активность"
-            value={todayData.steps}
-            unit="шагов"
-            icon={<Activity className="w-6 h-6" />}
-            color="bg-gradient-to-br from-purple-500 to-indigo-600 shadow-purple-500/30"
           />
         </div>
 

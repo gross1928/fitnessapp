@@ -130,12 +130,7 @@ export async function POST(req: NextRequest) {
         fats: analysisJson.estimated_nutrition.fats,
         carbs: analysisJson.estimated_nutrition.carbs
       },
-      ingredients: [
-        {
-          name: analysisJson.detected_food,
-          weight_grams: 100 // Примерный вес для анализа
-        }
-      ]
+      ingredients: analysisJson.ingredients || []
     }
 
     return NextResponse.json({ success: true, data: { analysis: nutritionData } })

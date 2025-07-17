@@ -228,6 +228,10 @@ export interface OpenAIFoodAnalysis {
     fats: number
     carbs: number
   }
+  ingredients: Array<{
+    name: string
+    weight_grams: number
+  }>
   serving_suggestions?: string[]
   health_notes?: string[]
 }

@@ -15,6 +15,7 @@ import {
   Zap
 } from 'lucide-react'
 import AnalysisModal from '@/components/nutrition/AnalysisModal';
+import ManualInputModal from '@/components/nutrition/ManualInputModal';
 import { NutritionData } from '@/types'; 
 
 interface FoodEntry {
@@ -42,6 +43,7 @@ export default function AddFoodPage() {
   const [analysisResult, setAnalysisResult] = useState<NutritionData | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null); // Новое состояние для ошибки
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isManualInputOpen, setIsManualInputOpen] = useState(false);
 
   // Загрузка данных при монтировании компонента
   useEffect(() => {
@@ -291,20 +293,8 @@ export default function AddFoodPage() {
   const handleManualInput = () => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
-      
-      // Показываем prompt для ввода текста
-      const foodDescription = prompt('Опишите ваш прием пищи:\nНапример: "Два яйца, тост с маслом, кофе с молоком"')
-      
-      if (foodDescription && foodDescription.trim().length > 2) {
-        analyzeTextInput(foodDescription.trim())
-      }
-    } else {
-      const foodDescription = prompt('Опишите ваш прием пищи:\nНапример: "Два яйца, тост с маслом, кофе с молоком"')
-      
-      if (foodDescription && foodDescription.trim().length > 2) {
-        analyzeTextInput(foodDescription.trim())
-      }
     }
+    setIsManualInputOpen(true);
   }
 
   const analyzeTextInput = async (description: string) => {
@@ -562,6 +552,14 @@ export default function AddFoodPage() {
         uploadProgress={uploadProgress}
         onSave={handleSaveMeal}
         onSendFeedback={handleSendFeedback}
+      />
+
+      <ManualInputModal
+        isOpen={isManualInputOpen}
+        onClose={() => setIsManualInputOpen(false)}
+        onConfirm={(text) => {
+          analyzeTextInput(text);
+        }}
       />
     </div>
   )

@@ -39,10 +39,10 @@ export async function POST(req: NextRequest) {
       .upsert(
         { 
           name: food_name,
-          calories_per_100g: Math.round(calories * ratio),
-          proteins_per_100g: Math.round(proteins * ratio),
-          fats_per_100g: Math.round(fats * ratio),
-          carbs_per_100g: Math.round(carbs * ratio),
+          calories_per_100g: calories * ratio,
+          proteins_per_100g: proteins * ratio,
+          fats_per_100g: fats * ratio,
+          carbs_per_100g: carbs * ratio,
           user_id: user.id // Указываем, кто добавил продукт
         },
         { onConflict: 'name, user_id', ignoreDuplicates: false }

@@ -86,10 +86,10 @@ export async function POST(request: NextRequest) {
                   food_item_id: foodItemId,
                   meal_type: 'snack', // по умолчанию перекус
                   amount: amount,
-                  calories: Math.round(analysis.estimated_calories * amount / 100),
-                  proteins: Math.round(analysis.estimated_nutrition.proteins * amount / 100),
-                  fats: Math.round(analysis.estimated_nutrition.fats * amount / 100),
-                  carbs: Math.round(analysis.estimated_nutrition.carbs * amount / 100),
+                  calories: analysis.estimated_calories * amount / 100,
+                  proteins: analysis.estimated_nutrition.proteins * amount / 100,
+                  fats: analysis.estimated_nutrition.fats * amount / 100,
+                  carbs: analysis.estimated_nutrition.carbs * amount / 100,
                   notes: `Анализ AI: ${foodDescription}`
                 })
             }
@@ -110,8 +110,8 @@ export async function POST(request: NextRequest) {
         fats: analysis.estimated_nutrition.fats,
         carbs: analysis.estimated_nutrition.carbs,
       },
-      // OpenAI текстовый анализ не всегда возвращает ингредиенты, поэтому нужна проверка
-      ingredients: [{ name: analysis.detected_food, weight_grams: 100 }], // Упрощаем для консистентности
+      // При текстовом анализе ингредиенты не возвращаются, поэтому отправляем пустой массив
+      ingredients: [], 
     };
 
     return NextResponse.json({

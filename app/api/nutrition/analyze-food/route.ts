@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id: user.id,
         name: analysisJson.detected_food,
-        calories_per_100g: Math.round(analysisJson.estimated_calories),
+        calories_per_100g: analysisJson.estimated_calories,
         proteins_per_100g: analysisJson.estimated_nutrition.proteins,
         fats_per_100g: analysisJson.estimated_nutrition.fats,
         carbs_per_100g: analysisJson.estimated_nutrition.carbs
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
         food_name: analysisJson.detected_food, // Дополнительное поле для удобства
         meal_type: 'snack', // По умолчанию, можно дать пользователю выбор
         amount: 100, // Предполагаем 100г для анализа
-        calories: Math.round(analysisJson.estimated_calories),
+        calories: analysisJson.estimated_calories,
         proteins: analysisJson.estimated_nutrition.proteins,
         fats: analysisJson.estimated_nutrition.fats,
         carbs: analysisJson.estimated_nutrition.carbs

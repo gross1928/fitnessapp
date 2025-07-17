@@ -116,9 +116,11 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     КБЖУ Блюда
                   </h2>
                   <p className="text-center text-lg font-medium text-gray-700 dark:text-gray-300">{analysisResult.dish_name}</p>
-                  <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-6">
-                    Общий вес: {totalWeight} г
-                  </p>
+                  {totalWeight > 0 && (
+                    <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-6">
+                      Общий вес: {totalWeight} г
+                    </p>
+                  )}
 
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">

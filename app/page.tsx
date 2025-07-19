@@ -646,10 +646,10 @@ export default function DashboardPage() {
               />
 
               <QuickActionButton
-                icon={<Apple className="w-7 h-7" />}
+                icon={<Utensils className="w-7 h-7" />}
                 label="План питания"
                 onClick={handleNutritionPlans}
-                color="bg-gradient-to-br from-orange-500 via-red-500 to-orange-600"
+                color="bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600"
                 textColor="text-white"
               />
 

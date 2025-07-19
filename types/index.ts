@@ -40,14 +40,19 @@ export interface NutritionData {
 }
 
 export interface FoodItem {
-  id: string
-  user_id: string
-  name: string
-  calories_per_100g: number
-  proteins_per_100g: number
-  fats_per_100g: number
-  carbs_per_100g: number
-  created_at: string
+  name: string;
+  calories: number;
+  protein: number;
+  fats: number;
+  carbs: number;
+  weight: number;
+}
+
+export interface Meal {
+  id?: number;
+  user_id?: string;
+  food_items: FoodItem[];
+  created_at?: string;
 }
 
 export interface MealEntry {
@@ -121,27 +126,8 @@ export interface HealthAnalysis {
 
 // AI Chat types
 export interface ChatMessage {
-  id: string
-  user_id: string
-  role: 'user' | 'assistant'
-  content: string
-  message_type: 'text' | 'food_photo' | 'analysis_file' | 'water_log'
-  metadata?: {
-    food_analysis?: {
-      detected_food: string
-      estimated_calories: number
-      estimated_nutrition: {
-        proteins: number
-        fats: number
-        carbs: number
-      }
-    }
-    file_analysis?: {
-      file_type: string
-      analysis_summary: string
-    }
-  }
-  created_at: string
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 // Dashboard types
@@ -253,4 +239,51 @@ export interface TelegramUser {
   last_name?: string
   username?: string
   language_code?: string
+}
+
+// --- Plan Generation Types ---
+
+export interface MealDetail {
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  description: string;
+  calories: number;
+  protein: number;
+  fats: number;
+  carbs: number;
+}
+
+export interface DailyNutritionPlan {
+  day_of_week: number; // 1-7
+  meals: MealDetail[];
+}
+
+export interface WorkoutExercise {
+  name: string;
+  sets: number;
+  reps: string; // e.g., "8-12" or "15"
+  rest_seconds: number;
+}
+
+export interface DailyWorkoutPlan {
+  day_of_week: number; // 1-7
+  description: string; // e.g., "Leg Day", "Cardio"
+  exercises: WorkoutExercise[];
+}
+
+export interface GeneratedPlan {
+  nutrition_plan: DailyNutritionPlan[];
+  workout_plan: DailyWorkoutPlan[];
+}
+
+export interface PlanGenerationParams {
+  goal: 'lose_weight' | 'gain_mass' | 'maintain';
+  experience: 'beginner' | 'intermediate' | 'advanced';
+  workout_days: number[]; // [1, 3, 5] for Mon, Wed, Fri
+  food_preferences: string; // "no fish, more chicken"
+  user_info: {
+    age: number;
+    sex: 'male' | 'female';
+    height: number;
+    weight: number;
+  };
 } 

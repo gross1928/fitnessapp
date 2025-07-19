@@ -13,9 +13,17 @@ import {
   Calendar,
   Target,
   Activity,
-  AlertCircle
+  AlertCircle,
+  GlassWater,
+  Utensils,
+  Brain,
+  Scale,
+  History,
+  PlusCircle,
+  BookText
 } from 'lucide-react'
-
+import ManualInputModal from '@/components/nutrition/ManualInputModal';
+import Link from 'next/link';
 
 
 function MetricCard({ 
@@ -79,19 +87,21 @@ function MetricCard({
   )
 }
 
+interface QuickActionButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void; // Made onClick optional
+  color?: string;
+  textColor?: string;
+}
+
 function QuickActionButton({ 
   icon, 
   label, 
   onClick,
   color = 'bg-gradient-to-br from-white to-gray-50',
-  textColor = 'text-gray-700'
-}: {
-  icon: React.ReactNode
-  label: string
-  onClick: () => void
-  color?: string
-  textColor?: string
-}) {
+  textColor = 'text-gray-700',
+}: QuickActionButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -118,6 +128,13 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [waterIntake, setWaterIntake] = useState(0)
   const [nutritionData, setNutritionData] = useState<any>(null) // Состояние для КБЖУ
+  const [showManualInput, setShowManualInput] = useState(false);
+
+  const handleManualInputConfirm = (text: string) => {
+    console.log('Manual input received:', text);
+    // Here we would typically call an API to analyze the text
+    setShowManualInput(false);
+  };
 
   const greeting = () => {
     const hour = currentTime.getHours()
@@ -325,7 +342,7 @@ export default function DashboardPage() {
         
         // После успешной инициализации загружаем данные
         await loadDashboardData();
-
+        
       } catch (error) {
         console.error('💥 Критическая ошибка инициализации:', error)
         setError(`Критическая ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`)
@@ -618,6 +635,7 @@ export default function DashboardPage() {
         {/* Bottom padding for safe area */}
         <div className="h-8" />
       </div>
+      <ManualInputModal isOpen={showManualInput} onClose={() => setShowManualInput(false)} onConfirm={handleManualInputConfirm} />
     </div>
   )
 } 

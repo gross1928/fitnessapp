@@ -633,8 +633,8 @@ export default function DashboardPage() {
               />
 
               <QuickActionButton
-                icon={<BookText className="w-7 h-7" />}
-                label="Планы питания"
+                icon={<Activity className="w-7 h-7" />}
+                label="Планы тренировок"
                 onClick={handlePlans}
                 color="bg-gradient-to-br from-emerald-400 to-green-500"
                 textColor="text-white"

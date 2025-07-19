@@ -222,11 +222,18 @@ export default function DashboardPage() {
     }
   }
 
-  const handlePlans = () => {
+  const handleNutritionPlans = () => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
     }
-    router.push('/plans')
+    router.push('/nutrition-plans')
+  }
+
+  const handleWorkoutPlans = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
+    }
+    router.push('/workout-plans')
   }
 
   useEffect(() => {
@@ -639,10 +646,18 @@ export default function DashboardPage() {
               />
 
               <QuickActionButton
+                icon={<Apple className="w-7 h-7" />}
+                label="План питания"
+                onClick={handleNutritionPlans}
+                color="bg-gradient-to-br from-orange-500 via-red-500 to-orange-600"
+                textColor="text-white"
+              />
+
+              <QuickActionButton
                 icon={<Activity className="w-7 h-7" />}
-                label="Планы тренировок"
-                onClick={handlePlans}
-                color="bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600"
+                label="План тренировок"
+                onClick={handleWorkoutPlans}
+                color="bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-600"
                 textColor="text-white"
               />
             </div>

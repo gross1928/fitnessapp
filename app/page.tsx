@@ -216,6 +216,13 @@ export default function DashboardPage() {
     }
   }
 
+  const handlePlans = () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium')
+    }
+    router.push('/plans')
+  }
+
   useEffect(() => {
     const registerUser = async (telegramUser: any) => {
       try {
@@ -592,7 +599,7 @@ export default function DashboardPage() {
               Быстрые действия
             </h3>
           
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-3 gap-4">
               <QuickActionButton
                 icon={<Apple className="w-7 h-7" />}
                 label="Добавить еду"
@@ -622,6 +629,14 @@ export default function DashboardPage() {
                 label="Мои цели"
                 onClick={handleGoals}
                 color="bg-gradient-to-br from-pink-400 to-rose-500"
+                textColor="text-white"
+              />
+
+              <QuickActionButton
+                icon={<BookText className="w-7 h-7" />}
+                label="Планы питания"
+                onClick={handlePlans}
+                color="bg-gradient-to-br from-emerald-400 to-green-500"
                 textColor="text-white"
               />
             </div>

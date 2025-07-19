@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       .from('meal_entries')
       .select(`
         id,
-        food_items (name),
+        food_name,
         meal_type,
         amount,
         calories,
@@ -60,18 +60,20 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    console.log('Полученные записи:', mealEntries)
+
     // Форматируем данные для фронтенда
     const formattedEntries = (mealEntries || []).map((entry: any) => ({
       id: entry.id,
-      name: entry.food_items?.name || 'Неизвестный продукт',
+      name: entry.food_name || 'Неизвестный продукт',
       time: new Date(entry.created_at).toLocaleTimeString('ru-RU', {
         hour: '2-digit',
         minute: '2-digit'
       }),
-      calories: Math.round(entry.calories),
-      protein: Math.round(entry.proteins),
-      fat: Math.round(entry.fats),
-      carbs: Math.round(entry.carbs)
+      calories: Math.round(entry.calories || 0),
+      protein: Math.round(entry.proteins || 0),
+      fat: Math.round(entry.fats || 0),
+      carbs: Math.round(entry.carbs || 0)
     }))
 
     return NextResponse.json({

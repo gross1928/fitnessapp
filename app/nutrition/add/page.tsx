@@ -56,9 +56,12 @@ export default function AddFoodPage() {
       const telegramUser = typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user;
       
       if (!telegramUser) {
+        console.log('Telegram пользователь не найден');
         setHistoryLoading(false);
         return;
       }
+
+      console.log('Загружаем историю для пользователя:', telegramUser.id);
 
       const response = await fetch('/api/nutrition/history', {
         headers: {
@@ -67,8 +70,10 @@ export default function AddFoodPage() {
       })
 
       const result = await response.json()
+      console.log('Ответ API истории:', result);
 
       if (result.success) {
+        console.log('Установка истории:', result.data.entries);
         setTodayHistory(result.data.entries)
       } else {
         console.error('Ошибка загрузки истории:', result.error)

@@ -105,7 +105,7 @@ function QuickActionButton({
   return (
     <button
       onClick={onClick}
-      className={`${color} p-4 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-0 group relative overflow-hidden backdrop-blur-sm`}
+      className={`${color} p-5 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-0 group relative overflow-hidden backdrop-blur-sm`}
     >
       {/* Анимированный фон */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
@@ -115,10 +115,10 @@ function QuickActionButton({
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
       
       <div className="relative z-10">
-        <div className={`${textColor} mb-2 flex justify-center group-hover:scale-110 transition-all duration-300 group-hover:rotate-3`}>
+        <div className={`${textColor} mb-3 flex justify-center group-hover:scale-110 transition-all duration-300 group-hover:rotate-3`}>
           {icon}
         </div>
-        <p className={`text-xs font-bold ${textColor} text-center leading-tight tracking-wide`}>{label}</p>
+        <p className={`text-sm font-bold ${textColor} text-center leading-tight tracking-wide`}>{label}</p>
       </div>
     </button>
   )
@@ -605,9 +605,9 @@ export default function DashboardPage() {
               Быстрые действия
             </h3>
           
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 gap-3">
               <QuickActionButton
-                icon={<Apple className="w-6 h-6" />}
+                icon={<Apple className="w-7 h-7" />}
                 label="Добавить еду"
                 onClick={handleAddFood}
                 color="bg-gradient-to-br from-orange-500 via-red-500 to-orange-600"
@@ -615,7 +615,7 @@ export default function DashboardPage() {
               />
               
               <QuickActionButton
-                icon={<Droplets className="w-6 h-6" />}
+                icon={<Droplets className="w-7 h-7" />}
                 label="Выпить воды"
                 onClick={handleAddWater}
                 color="bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600"
@@ -623,7 +623,7 @@ export default function DashboardPage() {
               />
               
               <QuickActionButton
-                icon={<FileText className="w-6 h-6" />}
+                icon={<FileText className="w-7 h-7" />}
                 label="Загрузить анализы"
                 onClick={handleUploadAnalysis}
                 color="bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600"
@@ -631,7 +631,7 @@ export default function DashboardPage() {
               />
               
               <QuickActionButton
-                icon={<Target className="w-6 h-6" />}
+                icon={<Target className="w-7 h-7" />}
                 label="Мои цели"
                 onClick={handleGoals}
                 color="bg-gradient-to-br from-pink-500 via-rose-500 to-pink-600"
@@ -639,7 +639,7 @@ export default function DashboardPage() {
               />
 
               <QuickActionButton
-                icon={<Activity className="w-6 h-6" />}
+                icon={<Activity className="w-7 h-7" />}
                 label="Планы тренировок"
                 onClick={handlePlans}
                 color="bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600"

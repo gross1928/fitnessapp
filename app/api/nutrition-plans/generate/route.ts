@@ -63,98 +63,98 @@ export async function POST(request: NextRequest) {
 Создай план в формате JSON со следующей структурой:
 {
   "id": "unique_id",
-  "goal": "описание цели",
+  "goal": "описание цели на русском языке",
   "dailyCalories": ${dailyCalories},
   "meals": [
     {
       "type": "${mealTypes[0]}",
-      "name": "название блюда",
-      "description": "краткое описание",
+      "name": "название блюда на русском языке",
+      "description": "краткое описание на русском языке",
       "calories": ${Math.round(dailyCalories * calorieDistribution[0])},
       "protein": число в граммах,
       "fats": число в граммах,
       "carbs": число в граммах,
-      "ingredients": ["ингредиент1", "ингредиент2"],
-      "instructions": ["шаг1", "шаг2"],
+      "ingredients": ["ингредиент1 на русском", "ингредиент2 на русском"],
+      "instructions": ["шаг1 на русском", "шаг2 на русском"],
       "prepTime": число в минутах,
-      "cost": "low/medium/high"
+      "cost": "низкий/средний/высокий"
     }
     ${mealTypes.length > 1 ? `,
     {
       "type": "${mealTypes[1]}",
-      "name": "название блюда",
-      "description": "краткое описание",
+      "name": "название блюда на русском языке",
+      "description": "краткое описание на русском языке",
       "calories": ${Math.round(dailyCalories * calorieDistribution[1])},
       "protein": число в граммах,
       "fats": число в граммах,
       "carbs": число в граммах,
-      "ingredients": ["ингредиент1", "ингредиент2"],
-      "instructions": ["шаг1", "шаг2"],
+      "ingredients": ["ингредиент1 на русском", "ингредиент2 на русском"],
+      "instructions": ["шаг1 на русском", "шаг2 на русском"],
       "prepTime": число в минутах,
-      "cost": "low/medium/high"
+      "cost": "низкий/средний/высокий"
     }` : ''}
     ${mealTypes.length > 2 ? `,
     {
       "type": "${mealTypes[2]}",
-      "name": "название блюда",
-      "description": "краткое описание",
+      "name": "название блюда на русском языке",
+      "description": "краткое описание на русском языке",
       "calories": ${Math.round(dailyCalories * calorieDistribution[2])},
       "protein": число в граммах,
       "fats": число в граммах,
       "carbs": число в граммах,
-      "ingredients": ["ингредиент1", "ингредиент2"],
-      "instructions": ["шаг1", "шаг2"],
+      "ingredients": ["ингредиент1 на русском", "ингредиент2 на русском"],
+      "instructions": ["шаг1 на русском", "шаг2 на русском"],
       "prepTime": число в минутах,
-      "cost": "low/medium/high"
+      "cost": "низкий/средний/высокий"
     }` : ''}
     ${mealTypes.length > 3 ? `,
     {
       "type": "${mealTypes[3]}",
-      "name": "название блюда",
-      "description": "краткое описание",
+      "name": "название блюда на русском языке",
+      "description": "краткое описание на русском языке",
       "calories": ${Math.round(dailyCalories * calorieDistribution[3])},
       "protein": число в граммах,
       "fats": число в граммах,
       "carbs": число в граммах,
-      "ingredients": ["ингредиент1", "ингредиент2"],
-      "instructions": ["шаг1", "шаг2"],
+      "ingredients": ["ингредиент1 на русском", "ингредиент2 на русском"],
+      "instructions": ["шаг1 на русском", "шаг2 на русском"],
       "prepTime": число в минутах,
-      "cost": "low/medium/high"
+      "cost": "низкий/средний/высокий"
     }` : ''}
     ${mealTypes.length > 4 ? `,
     {
       "type": "${mealTypes[4]}",
-      "name": "название блюда",
-      "description": "краткое описание",
+      "name": "название блюда на русском языке",
+      "description": "краткое описание на русском языке",
       "calories": ${Math.round(dailyCalories * calorieDistribution[4])},
       "protein": число в граммах,
       "fats": число в граммах,
       "carbs": число в граммах,
-      "ingredients": ["ингредиент1", "ингредиент2"],
-      "instructions": ["шаг1", "шаг2"],
+      "ingredients": ["ингредиент1 на русском", "ингредиент2 на русском"],
+      "instructions": ["шаг1 на русском", "шаг2 на русском"],
       "prepTime": число в минутах,
-      "cost": "low/medium/high"
+      "cost": "низкий/средний/высокий"
     }` : ''}
     ${mealTypes.length > 5 ? `,
     {
       "type": "${mealTypes[5]}",
-      "name": "название блюда",
-      "description": "краткое описание",
+      "name": "название блюда на русском языке",
+      "description": "краткое описание на русском языке",
       "calories": ${Math.round(dailyCalories * calorieDistribution[5])},
       "protein": число в граммах,
       "fats": число в граммах,
       "carbs": число в граммах,
-      "ingredients": ["ингредиент1", "ингредиент2"],
-      "instructions": ["шаг1", "шаг2"],
+      "ingredients": ["ингредиент1 на русском", "ингредиент2 на русском"],
+      "instructions": ["шаг1 на русском", "шаг2 на русском"],
       "prepTime": число в минутах,
-      "cost": "low/medium/high"
+      "cost": "низкий/средний/высокий"
     }` : ''}
   ],
-  "tips": ["совет1", "совет2", "совет3"],
-  "shoppingList": ["продукт1", "продукт2", "продукт3"]
+  "tips": ["совет1 на русском", "совет2 на русском", "совет3 на русском"],
+  "shoppingList": ["продукт1 на русском", "продукт2 на русском", "продукт3 на русском"]
 }
 
-Важно: создай только план на один день, не на неделю.`;
+ВАЖНО: ВСЕ ТЕКСТЫ ДОЛЖНЫ БЫТЬ НА РУССКОМ ЯЗЫКЕ! Создай только план на один день, не на неделю.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",

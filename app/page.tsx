@@ -26,66 +26,7 @@ import ManualInputModal from '@/components/nutrition/ManualInputModal';
 import Link from 'next/link';
 
 
-function MetricCard({ 
-  title, 
-  value, 
-  target, 
-  unit, 
-  icon, 
-  color,
-  trend 
-}: {
-  title: string
-  value: number
-  target?: number
-  unit: string
-  icon: React.ReactNode
-  color: string
-  trend?: { value: number; isPositive: boolean }
-}) {
-  const percentage = target ? Math.min((value / target) * 100, 100) : 100
-  
-  return (
-    <div className={`p-4 rounded-2xl shadow-lg ${color} text-white relative overflow-hidden card-hover`}>
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <div className="p-2 bg-white/20 rounded-xl">
-            {icon}
-          </div>
-          {trend && (
-            <div className={`flex items-center text-sm ${trend.isPositive ? 'text-green-100' : 'text-red-100'}`}>
-              <TrendingUp className={`w-4 h-4 mr-1 ${!trend.isPositive && 'rotate-180'}`} />
-              {Math.abs(trend.value)}%
-            </div>
-          )}
-        </div>
-        
-        <h3 className="text-sm font-medium opacity-90 mb-1">{title}</h3>
-        <div className="flex items-end justify-between">
-          <div>
-            <span className="text-2xl font-bold">{value.toLocaleString('ru-RU')}</span>
-            <span className="text-sm opacity-80 ml-1">{unit}</span>
-          </div>
-          {target && (
-            <span className="text-xs opacity-70">{target.toLocaleString('ru-RU')}</span>
-          )}
-        </div>
-        
-        {target && (
-          <div className="mt-3">
-            <div className="w-full bg-white/20 rounded-full h-2">
-              <div 
-                className="bg-white rounded-full h-2 transition-all duration-500" 
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+
 
 interface QuickActionButtonProps {
   icon: React.ReactNode;
@@ -514,18 +455,13 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 p-4">
       <div className="max-w-lg mx-auto space-y-6">
-        {/* Header */}
+        {/* Упрощенный Header */}
         <div className="text-center pt-6 pb-4 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-700 rounded-3xl shadow-2xl border border-green-400/30 relative overflow-hidden">
-          {/* Светящийся фон */}
           <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 via-emerald-500/20 to-teal-600/10" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_70%)]" />
           
           <div className="relative z-10">
-            <h1 className="text-4xl font-black mb-3 bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-2xl" 
-                style={{
-                  textShadow: '0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.4)',
-                  filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.9))'
-                }}>
+            <h1 className="text-4xl font-black mb-3 bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-2xl">
               ДаЕда
             </h1>
             <p className="text-green-100 text-lg font-medium leading-relaxed">
@@ -541,68 +477,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <MetricCard
-            title="Калории"
-            value={nutritionData?.total_calories || 0}
-            target={user?.daily_calorie_target || 2500}
-            unit="ккал"
-            icon={<Apple className="w-6 h-6" />}
-            color="bg-gradient-to-br from-orange-500 to-red-600 shadow-orange-500/30"
-          />
-          
-          <MetricCard
-            title="Вода"
-            value={todayData.water.current}
-            target={todayData.water.target}
-            unit="мл"
-            icon={<Droplets className="w-6 h-6" />}
-            color="bg-gradient-to-br from-blue-500 to-cyan-600 shadow-blue-500/30"
-          />
-        </div>
-
-        {/* Nutrition breakdown */}
-        <div className="grid grid-cols-3 gap-3">
-          <MetricCard
-            title="Белки"
-            value={nutritionData?.total_proteins || 0}
-            target={user?.daily_protein_target || 122}
-            unit="г"
-            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-orange-600 font-bold text-sm">Б</div>}
-            color="bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-400/30"
-          />
-          
-          <MetricCard
-            title="Жиры"
-            value={nutritionData?.total_fats || 0}
-            target={user?.daily_fat_target || 69}
-            unit="г"
-            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-yellow-600 font-bold text-sm">Ж</div>}
-            color="bg-gradient-to-br from-yellow-400 to-amber-500 shadow-yellow-400/30"
-          />
-          
-          <MetricCard
-            title="Углеводы"
-            value={nutritionData?.total_carbs || 0}
-            target={user?.daily_carb_target || 347}
-            unit="г"
-            icon={<div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-green-600 font-bold text-sm">У</div>}
-            color="bg-gradient-to-br from-green-400 to-emerald-600 shadow-green-400/30"
-          />
-        </div>
-
-        {/* Other metrics */}
-        <div className="grid grid-cols-1 gap-4">
-          <MetricCard
-            title="Текущий вес"
-            value={todayData.weight}
-            unit="кг"
-            icon={<Weight className="w-6 h-6" />}
-            color="bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30"
-          />
-        </div>
-
         {/* Quick Actions */}
         <div className="bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-2xl border border-green-200/50 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5" />
@@ -612,7 +486,7 @@ export default function DashboardPage() {
               Быстрые действия
             </h3>
           
-                      <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <QuickActionButton
                 icon={<Apple className="w-7 h-7" />}
                 label="Добавить еду"
@@ -663,10 +537,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
-
-
-
 
         {/* Bottom padding for safe area */}
         <div className="h-8" />

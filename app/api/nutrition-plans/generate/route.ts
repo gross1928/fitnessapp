@@ -22,15 +22,31 @@ export async function POST(request: NextRequest) {
       dailyCalories = 2300; // здоровое питание
     }
 
+    // Добавляем логирование для отладки
+    console.log('🔍 Полученные предпочтения:', {
+      mealsPerDay,
+      goals,
+      budget,
+      cookingTime
+    });
+
     // Определяем типы приемов пищи в зависимости от количества
     let mealTypes = ['Завтрак', 'Обед', 'Ужин'];
+    let calorieDistribution = [0.3, 0.4, 0.3]; // Завтрак, Обед, Ужин
+    
     if (mealsPerDay === 4) {
       mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Ужин'];
+      calorieDistribution = [0.25, 0.2, 0.35, 0.2]; // Завтрак, Перекус, Обед, Ужин
     } else if (mealsPerDay === 5) {
       mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
+      calorieDistribution = [0.25, 0.15, 0.3, 0.15, 0.15]; // Завтрак, Перекус, Обед, Полдник, Ужин
     } else if (mealsPerDay === 6) {
       mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин', 'Перекус'];
+      calorieDistribution = [0.2, 0.15, 0.25, 0.15, 0.15, 0.1]; // Завтрак, Перекус, Обед, Полдник, Ужин, Перекус
     }
+
+    console.log('🍽️ Типы приемов пищи:', mealTypes);
+    console.log('📊 Распределение калорий:', calorieDistribution);
 
     const prompt = `
 Создай персональный план питания на неделю для человека со следующими характеристиками:
@@ -57,7 +73,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[0]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.25)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[0])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -70,7 +86,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[1]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.25)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[1])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -83,7 +99,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[2]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.3)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[2])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -97,7 +113,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[3]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.2)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[3])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -111,7 +127,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[4]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.15)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[4])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -125,7 +141,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[5]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.1)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[5])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -144,7 +160,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[0]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.25)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[0])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -157,7 +173,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[1]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.25)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[1])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -170,7 +186,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[2]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.3)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[2])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -184,7 +200,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[3]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.2)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[3])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -198,7 +214,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[4]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.15)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[4])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,
@@ -212,7 +228,7 @@ export async function POST(request: NextRequest) {
           "type": "${mealTypes[5]}",
           "name": "название блюда",
           "description": "краткое описание",
-          "calories": ${Math.round(dailyCalories * 0.1)},
+          "calories": ${Math.round(dailyCalories * calorieDistribution[5])},
           "protein": число в граммах,
           "fats": число в граммах,
           "carbs": число в граммах,

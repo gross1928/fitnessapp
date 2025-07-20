@@ -153,13 +153,23 @@ export default function WorkoutPlansPage() {
         ...prev,
         [question.id]: answer
       }));
+      // Для multi-select не переходим к следующему вопросу автоматически
     } else {
       setPreferences(prev => ({
         ...prev,
         [question.id]: answer
       }));
+      
+      // Для select и slider вопросов переходим к следующему
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1);
+      } else {
+        generatePlan();
+      }
     }
+  };
 
+  const handleContinue = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
@@ -319,7 +329,10 @@ export default function WorkoutPlansPage() {
                           const newValue = current.includes(optionValue) 
                             ? current.filter(item => item !== optionValue)
                             : [...current, optionValue];
-                          handleAnswer(newValue);
+                          setPreferences(prev => ({
+                            ...prev,
+                            [question.id]: newValue
+                          }));
                         }}
                         className={`w-full p-4 text-left border rounded-xl transition-all duration-200 ${
                           (preferences[question.id as keyof WorkoutPreferences] as any[])?.includes(optionValue)
@@ -338,6 +351,18 @@ export default function WorkoutPlansPage() {
                       </button>
                     );
                   })}
+                </div>
+              )}
+              
+              {/* Кнопка "Продолжить" для multi-select вопросов */}
+              {question.type === 'multi-select' && (
+                <div className="mt-6">
+                  <Button 
+                    onClick={handleContinue}
+                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  >
+                    Продолжить
+                  </Button>
                 </div>
               )}
             </CardContent>

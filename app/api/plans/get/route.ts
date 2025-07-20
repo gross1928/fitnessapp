@@ -1,82 +1,97 @@
+import { createServiceRoleClient } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const userId = request.headers.get('x-telegram-user-id');
-    const { searchParams } = new URL(request.url);
-    const planType = searchParams.get('type'); // 'workout', 'nutrition', or null for all
+    const supabase = createServiceRoleClient();
+    const { searchParams } = new URL(req.url);
+    const planType = searchParams.get('planType'); // 'nutrition' или 'workout'
+    const telegramUserId = req.headers.get('x-telegram-user-id');
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    if (!telegramUserId) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Telegram user ID is required' 
+      }, { status: 400 });
     }
 
-    let result;
+    if (!planType || !['nutrition', 'workout'].includes(planType)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Plan type must be "nutrition" or "workout"' 
+      }, { status: 400 });
+    }
+
+    // Получаем пользователя по telegram_id
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('telegram_id', parseInt(telegramUserId, 10))
+      .single();
+
+    if (userError || !user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'User not found' 
+      }, { status: 404 });
+    }
+
+    // Получаем активный план пользователя
+    let plan;
+    let error;
 
     if (planType === 'workout') {
-      // Получаем только планы тренировок
-      result = await supabase
+      const result = await supabase
         .from('user_workout_plans')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-    } else if (planType === 'nutrition') {
-      // Получаем только планы питания
-      result = await supabase
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      plan = result.data;
+      error = result.error;
+    } else {
+      const result = await supabase
         .from('user_nutrition_plans')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      plan = result.data;
+      error = result.error;
+    }
 
-    } else {
-      // Получаем все планы
-      const [workoutPlans, nutritionPlans] = await Promise.all([
-        supabase
-          .from('user_workout_plans')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('user_nutrition_plans')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-      ]);
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching plan:', error);
+      return NextResponse.json({ 
+        success: false, 
+        error: `Failed to fetch plan: ${error.message}` 
+      }, { status: 500 });
+    }
 
-      return NextResponse.json({
-        success: true,
-        workoutPlans: workoutPlans.data || [],
-        nutritionPlans: nutritionPlans.data || []
+    // Если план не найден, возвращаем null
+    if (!plan) {
+      return NextResponse.json({ 
+        success: true, 
+        data: { plan: null } 
       });
     }
 
-    if (result.error) {
-      console.error('Error fetching plans:', result.error);
-      return NextResponse.json(
-        { error: 'Failed to fetch plans' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      plans: result.data || []
+    return NextResponse.json({ 
+      success: true, 
+      data: { plan } 
     });
 
   } catch (error) {
-    console.error('Error in get plans API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Error in get plan API:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Internal server error' 
+    }, { status: 500 });
   }
 } 

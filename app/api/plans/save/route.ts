@@ -1,97 +1,86 @@
+import { createServiceRoleClient } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { planType, planData, name } = body;
-    const userId = request.headers.get('x-telegram-user-id');
+    const supabase = createServiceRoleClient();
+    const { plan, userId, planType } = await req.json();
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    if (!userId || !plan || !planType) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Missing required fields: userId, plan, planType' 
+      }, { status: 400 });
     }
 
-    if (!planType || !planData) {
-      return NextResponse.json(
-        { error: 'Plan type and plan data are required' },
-        { status: 400 }
-      );
+    // Деактивируем все предыдущие планы этого типа
+    if (planType === 'workout') {
+      await supabase
+        .from('user_workout_plans')
+        .update({ is_active: false })
+        .eq('user_id', userId);
+    } else if (planType === 'nutrition') {
+      await supabase
+        .from('user_nutrition_plans')
+        .update({ is_active: false })
+        .eq('user_id', userId);
     }
 
-    let result;
-    const planName = name || (planType === 'workout' ? 'Мой план тренировок' : 'Мой план питания');
+    // Сохраняем новый план в соответствующую таблицу
+    let savedPlan;
+    let saveError;
 
     if (planType === 'workout') {
-      // Деактивируем все предыдущие планы тренировок
-      await supabase
-        .from('user_workout_plans')
-        .update({ is_active: false })
-        .eq('user_id', userId);
-
-      // Сохраняем новый план
-      result = await supabase
+      const result = await supabase
         .from('user_workout_plans')
         .insert({
           user_id: userId,
-          plan_data: planData,
-          name: planName,
+          plan_data: plan,
           is_active: true
         })
-        .select()
+        .select('id')
         .single();
-
+      
+      savedPlan = result.data;
+      saveError = result.error;
     } else if (planType === 'nutrition') {
-      // Деактивируем все предыдущие планы питания
-      await supabase
-        .from('user_nutrition_plans')
-        .update({ is_active: false })
-        .eq('user_id', userId);
-
-      // Сохраняем новый план
-      result = await supabase
+      const result = await supabase
         .from('user_nutrition_plans')
         .insert({
           user_id: userId,
-          plan_data: planData,
-          name: planName,
+          plan_data: plan,
           is_active: true
         })
-        .select()
+        .select('id')
         .single();
-
+      
+      savedPlan = result.data;
+      saveError = result.error;
     } else {
-      return NextResponse.json(
-        { error: 'Invalid plan type. Must be "workout" or "nutrition"' },
-        { status: 400 }
-      );
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Invalid plan type. Must be "workout" or "nutrition"' 
+      }, { status: 400 });
     }
 
-    if (result.error) {
-      console.error('Error saving plan:', result.error);
-      return NextResponse.json(
-        { error: 'Failed to save plan' },
-        { status: 500 }
-      );
+    if (saveError) {
+      console.error('Error saving plan:', saveError);
+      return NextResponse.json({ 
+        success: false, 
+        error: `Failed to save plan: ${saveError.message}` 
+      }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      plan: result.data
+    return NextResponse.json({ 
+      success: true, 
+      data: { planId: savedPlan?.id } 
     });
 
   } catch (error) {
     console.error('Error in save plan API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Internal server error' 
+    }, { status: 500 });
   }
 } 

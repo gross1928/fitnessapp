@@ -35,8 +35,7 @@ interface WorkoutPlan {
   id: string;
   goal: string;
   duration: number;
-  workouts: {
-    day: number;
+  workout: {
     name: string;
     type: string;
     duration: number;
@@ -49,11 +48,10 @@ interface WorkoutPlan {
       description: string;
       muscleGroups: string[];
       equipment: string[];
-      tips: string[];
     }[];
     warmup: string[];
     cooldown: string[];
-  }[];
+  };
   tips: string[];
   equipment: string[];
 }
@@ -208,30 +206,26 @@ export default function WorkoutPlansPage() {
       setPlan({
         id: 'demo',
         goal: 'Улучшение силы',
-        duration: 8,
-        workouts: [
-          {
-            day: 1,
-            name: 'Тренировка груди и трицепса',
-            type: 'Силовая',
-            duration: 45,
-            difficulty: 'Средняя',
-            exercises: [
-              {
-                name: 'Отжимания',
-                sets: 3,
-                reps: '10-15',
-                rest: 60,
-                description: 'Классические отжимания от пола',
-                muscleGroups: ['Грудь', 'Трицепс'],
-                equipment: ['Вес тела'],
-                tips: ['Держите корпус прямым', 'Опускайтесь до касания грудью пола']
-              }
-            ],
-            warmup: ['Легкая разминка 5 минут', 'Растяжка мышц груди'],
-            cooldown: ['Растяжка 5 минут', 'Восстановление дыхания']
-          }
-        ],
+        duration: 1,
+        workout: {
+          name: 'Тренировка груди и трицепса',
+          type: 'Силовая',
+          duration: 45,
+          difficulty: 'Средняя',
+          exercises: [
+            {
+              name: 'Отжимания',
+              sets: 3,
+              reps: '10-15',
+              rest: 60,
+              description: 'Классические отжимания от пола',
+              muscleGroups: ['Грудь', 'Трицепс'],
+              equipment: ['Вес тела']
+            }
+          ],
+          warmup: ['Легкая разминка 5 минут', 'Растяжка мышц груди'],
+          cooldown: ['Растяжка 5 минут', 'Восстановление дыхания']
+        },
         tips: ['Разминайтесь перед каждой тренировкой', 'Следите за техникой', 'Не пропускайте тренировки'],
         equipment: ['Гантели', 'Коврик']
       });
@@ -258,13 +252,14 @@ export default function WorkoutPlansPage() {
       });
 
       if (response.ok) {
-        alert('План успешно сохранен!');
+        // План успешно сохранен - можно добавить уведомление в UI
+        console.log('План успешно сохранен');
       } else {
         throw new Error('Ошибка сохранения');
       }
     } catch (error) {
       console.error('Ошибка сохранения:', error);
-      alert('Не удалось сохранить план');
+      // Можно добавить уведомление об ошибке в UI
     } finally {
       setIsSaving(false);
     }
@@ -445,7 +440,7 @@ export default function WorkoutPlansPage() {
             <p className="text-blue-100">Персональная программа на основе ваших целей</p>
             <div className="mt-4 flex justify-center space-x-4 text-sm">
               <div className="bg-white/20 rounded-lg px-3 py-1">
-                <span className="font-semibold">{plan.duration} недель</span>
+                <span className="font-semibold">1 день</span>
               </div>
               <div className="bg-white/20 rounded-lg px-3 py-1">
                 <span className="font-semibold">{plan.goal}</span>
@@ -461,23 +456,21 @@ export default function WorkoutPlansPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Dumbbell className="w-5 h-5 mr-2" />
-                    Программа тренировок
+                    Тренировка на день
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {plan.workouts.map((workout, index) => (
-                    <div key={index} className="mb-8">
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-1">{getDayName(workout.day)}</h3>
-                            <h4 className="text-lg font-semibold text-blue-600">{workout.name}</h4>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-semibold text-blue-600">{workout.duration} мин</div>
-                            <div className="text-xs text-gray-500">{workout.difficulty}</div>
-                          </div>
-                        </div>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-1">Сегодняшняя тренировка</h3>
+                        <h4 className="text-lg font-semibold text-blue-600">{plan.workout.name}</h4>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-blue-600">{plan.workout.duration} мин</div>
+                        <div className="text-xs text-gray-500">{plan.workout.difficulty}</div>
+                      </div>
+                    </div>
 
                         {/* Warmup */}
                         <div className="mb-4">
@@ -486,7 +479,7 @@ export default function WorkoutPlansPage() {
                             Разминка
                           </h5>
                           <ul className="space-y-1">
-                            {workout.warmup.map((item, idx) => (
+                            {plan.workout.warmup.map((item, idx) => (
                               <li key={idx} className="text-sm text-gray-600">• {item}</li>
                             ))}
                           </ul>
@@ -496,7 +489,7 @@ export default function WorkoutPlansPage() {
                         <div className="mb-4">
                           <h5 className="font-semibold text-gray-700 mb-3">Упражнения</h5>
                           <div className="space-y-3">
-                            {workout.exercises.map((exercise, idx) => (
+                            {plan.workout.exercises.map((exercise, idx) => (
                               <div key={idx} className="bg-white rounded-lg p-4 border border-blue-100">
                                 <div className="flex justify-between items-start mb-2">
                                   <h6 className="font-bold text-gray-800">{exercise.name}</h6>
@@ -526,14 +519,12 @@ export default function WorkoutPlansPage() {
                             Заминка
                           </h5>
                           <ul className="space-y-1">
-                            {workout.cooldown.map((item, idx) => (
+                            {plan.workout.cooldown.map((item, idx) => (
                               <li key={idx} className="text-sm text-gray-600">• {item}</li>
                             ))}
                           </ul>
                         </div>
                       </div>
-                    </div>
-                  ))}
                 </CardContent>
               </Card>
             </div>

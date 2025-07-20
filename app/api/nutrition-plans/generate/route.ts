@@ -29,10 +29,80 @@ export async function POST(request: NextRequest) {
   "dailyCalories": число,
   "meals": [
     {
-      "day": 1-7,
+      "day": 1,
       "meals": [
         {
-          "type": "Завтрак/Обед/Ужин/Перекус",
+          "type": "Завтрак",
+          "name": "название блюда",
+          "description": "краткое описание",
+          "calories": число,
+          "protein": число в граммах,
+          "fats": число в граммах,
+          "carbs": число в граммах,
+          "ingredients": ["ингредиент1", "ингредиент2"],
+          "instructions": ["шаг1", "шаг2"],
+          "prepTime": число в минутах,
+          "cost": "low/medium/high"
+        },
+        {
+          "type": "Обед",
+          "name": "название блюда",
+          "description": "краткое описание",
+          "calories": число,
+          "protein": число в граммах,
+          "fats": число в граммах,
+          "carbs": число в граммах,
+          "ingredients": ["ингредиент1", "ингредиент2"],
+          "instructions": ["шаг1", "шаг2"],
+          "prepTime": число в минутах,
+          "cost": "low/medium/high"
+        },
+        {
+          "type": "Ужин",
+          "name": "название блюда",
+          "description": "краткое описание",
+          "calories": число,
+          "protein": число в граммах,
+          "fats": число в граммах,
+          "carbs": число в граммах,
+          "ingredients": ["ингредиент1", "ингредиент2"],
+          "instructions": ["шаг1", "шаг2"],
+          "prepTime": число в минутах,
+          "cost": "low/medium/high"
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "meals": [
+        {
+          "type": "Завтрак",
+          "name": "название блюда",
+          "description": "краткое описание",
+          "calories": число,
+          "protein": число в граммах,
+          "fats": число в граммах,
+          "carbs": число в граммах,
+          "ingredients": ["ингредиент1", "ингредиент2"],
+          "instructions": ["шаг1", "шаг2"],
+          "prepTime": число в минутах,
+          "cost": "low/medium/high"
+        },
+        {
+          "type": "Обед",
+          "name": "название блюда",
+          "description": "краткое описание",
+          "calories": число,
+          "protein": число в граммах,
+          "fats": число в граммах,
+          "carbs": число в граммах,
+          "ingredients": ["ингредиент1", "ингредиент2"],
+          "instructions": ["шаг1", "шаг2"],
+          "prepTime": число в минутах,
+          "cost": "low/medium/high"
+        },
+        {
+          "type": "Ужин",
           "name": "название блюда",
           "description": "краткое описание",
           "calories": число,
@@ -47,10 +117,10 @@ export async function POST(request: NextRequest) {
       ]
     }
   ],
-  "tips": ["совет1", "совет2"],
   "shoppingList": ["продукт1", "продукт2"]
 }
 
+ВАЖНО: Создай план питания для ВСЕХ 7 дней недели (дни 1-7). Не пропускай дни!
 Учти все предпочтения и ограничения. Сделай план разнообразным и вкусным.
 `;
 

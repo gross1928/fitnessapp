@@ -459,26 +459,6 @@ export default function NutritionPlansPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Tips */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Heart className="w-5 h-5 mr-2" />
-                    Советы
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {plan.tips.map((tip, index) => (
-                      <li key={index} className="flex items-start">
-                        <CheckCircle className="w-4 h-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
               {/* Shopping List */}
               <Card>
                 <CardHeader>

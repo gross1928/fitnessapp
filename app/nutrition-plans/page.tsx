@@ -130,17 +130,27 @@ export default function NutritionPlansPage() {
   const handleAnswer = (answer: any) => {
     const question = questions[currentQuestion];
     
+    console.log(`📝 Ответ на вопрос "${question.title}":`, answer);
+    
     if (question.type === 'multi-select') {
-      setPreferences(prev => ({
-        ...prev,
-        [question.id]: answer
-      }));
+      setPreferences(prev => {
+        const newPrefs = {
+          ...prev,
+          [question.id]: answer
+        };
+        console.log('🔄 Обновленные предпочтения (multi-select):', newPrefs);
+        return newPrefs;
+      });
       // Для multi-select не переходим к следующему вопросу автоматически
     } else {
-      setPreferences(prev => ({
-        ...prev,
-        [question.id]: answer
-      }));
+      setPreferences(prev => {
+        const newPrefs = {
+          ...prev,
+          [question.id]: answer
+        };
+        console.log('🔄 Обновленные предпочтения (select):', newPrefs);
+        return newPrefs;
+      });
       
       // Для select вопросов переходим к следующему
       if (currentQuestion < questions.length - 1) {
@@ -163,6 +173,9 @@ export default function NutritionPlansPage() {
 
   const generatePlan = async () => {
     setStep('generating');
+    
+    // Добавляем логирование предпочтений
+    console.log('🔍 Отправляем предпочтения в API:', preferences);
     
     try {
       // Сохраняем предпочтения в базу данных
@@ -254,13 +267,14 @@ export default function NutritionPlansPage() {
       });
 
       if (response.ok) {
-        alert('План успешно сохранен!');
+        // План успешно сохранен - можно добавить уведомление в UI
+        console.log('План успешно сохранен');
       } else {
         throw new Error('Ошибка сохранения');
       }
     } catch (error) {
       console.error('Ошибка сохранения:', error);
-      alert('Не удалось сохранить план');
+      // Можно добавить уведомление об ошибке в UI
     } finally {
       setIsSaving(false);
     }

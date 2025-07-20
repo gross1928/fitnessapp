@@ -411,6 +411,7 @@ export type Database = {
           id: string
           last_name: string | null
           name: string | null
+          nutrition_preferences: Json | null
           target_weight: number | null
           telegram_id: number
           updated_at: string | null
@@ -437,6 +438,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           name?: string | null
+          nutrition_preferences?: Json | null
           target_weight?: number | null
           telegram_id: number
           updated_at?: string | null
@@ -463,6 +465,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           name?: string | null
+          nutrition_preferences?: Json | null
           target_weight?: number | null
           telegram_id?: number
           updated_at?: string | null

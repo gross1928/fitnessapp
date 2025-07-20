@@ -57,7 +57,7 @@ interface WorkoutPlan {
 }
 
 export default function WorkoutPlansPage() {
-  const [step, setStep] = useState<'onboarding' | 'generating' | 'plan'>('onboarding');
+  const [step, setStep] = useState<'loading' | 'onboarding' | 'generating' | 'plan'>('loading');
   const [preferences, setPreferences] = useState<WorkoutPreferences>({
     goals: 'improve_strength',
     experience: 'beginner',
@@ -72,6 +72,58 @@ export default function WorkoutPlansPage() {
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [savedPreferences, setSavedPreferences] = useState<WorkoutPreferences | null>(null);
+
+  // Загружаем сохраненные данные при монтировании компонента
+  React.useEffect(() => {
+    loadSavedData();
+  }, []);
+
+  const loadSavedData = async () => {
+    try {
+      const telegramUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id?.toString();
+      if (!telegramUserId) {
+        setStep('onboarding');
+        return;
+      }
+
+      // Загружаем сохраненный план
+      const planResponse = await fetch(`/api/plans/get?planType=workout`, {
+        headers: {
+          'x-telegram-user-id': telegramUserId
+        }
+      });
+
+      if (planResponse.ok) {
+        const planData = await planResponse.json();
+        if (planData.success && planData.data.plan) {
+          setPlan(planData.data.plan.plan_data);
+          setStep('plan');
+          return;
+        }
+      }
+
+      // Загружаем сохраненные предпочтения
+      const prefsResponse = await fetch('/api/plans/preferences', {
+        headers: {
+          'x-telegram-user-id': telegramUserId
+        }
+      });
+
+      if (prefsResponse.ok) {
+        const prefsData = await prefsResponse.json();
+        if (prefsData.success && prefsData.data.preferences) {
+          setSavedPreferences(prefsData.data.preferences);
+          setPreferences(prefsData.data.preferences);
+        }
+      }
+
+      setStep('onboarding');
+    } catch (error) {
+      console.error('Ошибка загрузки данных:', error);
+      setStep('onboarding');
+    }
+  };
 
   const questions = [
     {
@@ -82,7 +134,8 @@ export default function WorkoutPlansPage() {
         { value: 'beginner', label: 'Новичок (0-6 месяцев)', icon: Target },
         { value: 'intermediate', label: 'Средний (6 месяцев - 2 года)', icon: Target },
         { value: 'advanced', label: 'Продвинутый (2+ года)', icon: Target }
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'availableDays',
@@ -96,7 +149,8 @@ export default function WorkoutPlansPage() {
         { value: 5, label: 'Пятница' },
         { value: 6, label: 'Суббота' },
         { value: 7, label: 'Воскресенье' }
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'sessionDuration',
@@ -106,7 +160,8 @@ export default function WorkoutPlansPage() {
         { value: 'short', label: 'Короткая (30-45 мин)', icon: Clock },
         { value: 'medium', label: 'Средняя (45-60 мин)', icon: Clock },
         { value: 'long', label: 'Длинная (60+ мин)', icon: Clock }
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'equipment',
@@ -114,7 +169,8 @@ export default function WorkoutPlansPage() {
       type: 'multi-select',
       options: [
         'Гантели', 'Штанга', 'Турник', 'Брусья', 'Скамья', 'Резинки', 'Коврик', 'Только вес тела'
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'injuries',
@@ -122,14 +178,16 @@ export default function WorkoutPlansPage() {
       type: 'multi-select',
       options: [
         'Спина', 'Колени', 'Плечи', 'Локти', 'Запястья', 'Шея', 'Нет травм'
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'fitnessLevel',
       title: 'Оцените свой уровень физической подготовки (1-10)',
       type: 'slider',
       min: 1,
-      max: 10
+      max: 10,
+      skipIfSaved: true // Пропускаем если уже сохранено
     }
   ];
 
@@ -157,9 +215,25 @@ export default function WorkoutPlansPage() {
     }
   };
 
+  const getNextQuestion = () => {
+    let nextIndex = currentQuestion + 1;
+    
+    // Пропускаем вопросы, которые уже сохранены
+    while (nextIndex < questions.length && 
+           questions[nextIndex].skipIfSaved && 
+           savedPreferences && 
+           savedPreferences[questions[nextIndex].id as keyof WorkoutPreferences]) {
+      nextIndex++;
+    }
+    
+    return nextIndex;
+  };
+
   const handleContinue = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+    const nextQuestion = getNextQuestion();
+    
+    if (nextQuestion < questions.length) {
+      setCurrentQuestion(nextQuestion);
     } else {
       generatePlan();
     }
@@ -266,18 +340,39 @@ export default function WorkoutPlansPage() {
   };
 
   const generateNewPlan = async () => {
-    setIsGenerating(true);
-    try {
-      await generatePlan();
-    } finally {
-      setIsGenerating(false);
-    }
+    setStep('onboarding');
+    setCurrentQuestion(0);
+    setPlan(null);
+    
+    // Сбрасываем только те предпочтения, которые нужно спрашивать заново
+    const newPreferences = { ...preferences };
+    questions.forEach(question => {
+      if (!question.skipIfSaved) {
+        // Сбрасываем только те поля, которые не помечены как skipIfSaved
+        delete newPreferences[question.id as keyof WorkoutPreferences];
+      }
+    });
+    setPreferences(newPreferences);
   };
 
   const getDayName = (dayNumber: number) => {
     const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
     return days[dayNumber - 1];
   };
+
+  if (step === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+            <Loader2 className="w-10 h-10 text-white animate-spin" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Загружаем ваш план</h2>
+          <p className="text-gray-600">Проверяем сохраненные данные...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (step === 'onboarding') {
     const question = questions[currentQuestion];

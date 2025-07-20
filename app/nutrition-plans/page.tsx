@@ -50,7 +50,7 @@ interface NutritionPlan {
 }
 
 export default function NutritionPlansPage() {
-  const [step, setStep] = useState<'onboarding' | 'generating' | 'plan'>('onboarding');
+  const [step, setStep] = useState<'loading' | 'onboarding' | 'generating' | 'plan'>('loading');
   const [preferences, setPreferences] = useState<NutritionPreferences>({
     allergies: [],
     dislikes: [],
@@ -65,6 +65,58 @@ export default function NutritionPlansPage() {
   const [plan, setPlan] = useState<NutritionPlan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [savedPreferences, setSavedPreferences] = useState<NutritionPreferences | null>(null);
+
+  // Загружаем сохраненные данные при монтировании компонента
+  React.useEffect(() => {
+    loadSavedData();
+  }, []);
+
+  const loadSavedData = async () => {
+    try {
+      const telegramUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id?.toString();
+      if (!telegramUserId) {
+        setStep('onboarding');
+        return;
+      }
+
+      // Загружаем сохраненный план
+      const planResponse = await fetch(`/api/plans/get?planType=nutrition`, {
+        headers: {
+          'x-telegram-user-id': telegramUserId
+        }
+      });
+
+      if (planResponse.ok) {
+        const planData = await planResponse.json();
+        if (planData.success && planData.data.plan) {
+          setPlan(planData.data.plan.plan_data);
+          setStep('plan');
+          return;
+        }
+      }
+
+      // Загружаем сохраненные предпочтения
+      const prefsResponse = await fetch('/api/plans/preferences', {
+        headers: {
+          'x-telegram-user-id': telegramUserId
+        }
+      });
+
+      if (prefsResponse.ok) {
+        const prefsData = await prefsResponse.json();
+        if (prefsData.success && prefsData.data.preferences) {
+          setSavedPreferences(prefsData.data.preferences);
+          setPreferences(prefsData.data.preferences);
+        }
+      }
+
+      setStep('onboarding');
+    } catch (error) {
+      console.error('Ошибка загрузки данных:', error);
+      setStep('onboarding');
+    }
+  };
 
   const questions = [
     {
@@ -73,7 +125,8 @@ export default function NutritionPlansPage() {
       type: 'multi-select',
       options: [
         'Глютен', 'Лактоза', 'Орехи', 'Морепродукты', 'Яйца', 'Соя', 'Мед', 'Нет аллергий'
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'likes',
@@ -159,9 +212,25 @@ export default function NutritionPlansPage() {
     }
   };
 
+  const getNextQuestion = () => {
+    let nextIndex = currentQuestion + 1;
+    
+    // Пропускаем вопросы, которые уже сохранены
+    while (nextIndex < questions.length && 
+           questions[nextIndex].skipIfSaved && 
+           savedPreferences && 
+           savedPreferences[questions[nextIndex].id as keyof NutritionPreferences]) {
+      nextIndex++;
+    }
+    
+    return nextIndex;
+  };
+
   const handleContinue = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+    const nextQuestion = getNextQuestion();
+    
+    if (nextQuestion < questions.length) {
+      setCurrentQuestion(nextQuestion);
     } else {
       // Все вопросы отвечены, генерируем план
       generatePlan();
@@ -273,13 +342,34 @@ export default function NutritionPlansPage() {
   };
 
   const generateNewPlan = async () => {
-    setIsGenerating(true);
-    try {
-      await generatePlan();
-    } finally {
-      setIsGenerating(false);
-    }
+    setStep('onboarding');
+    setCurrentQuestion(0);
+    setPlan(null);
+    
+    // Сбрасываем только те предпочтения, которые нужно спрашивать заново
+    const newPreferences = { ...preferences };
+    questions.forEach(question => {
+      if (!question.skipIfSaved) {
+        // Сбрасываем только те поля, которые не помечены как skipIfSaved
+        delete newPreferences[question.id as keyof NutritionPreferences];
+      }
+    });
+    setPreferences(newPreferences);
   };
+
+  if (step === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-lime-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+            <Loader2 className="w-10 h-10 text-white animate-spin" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Загружаем ваш план</h2>
+          <p className="text-gray-600">Проверяем сохраненные данные...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (step === 'onboarding') {
     const question = questions[currentQuestion];

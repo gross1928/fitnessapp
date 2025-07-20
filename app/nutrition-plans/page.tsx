@@ -134,7 +134,8 @@ export default function NutritionPlansPage() {
       type: 'multi-select',
       options: [
         'Мясо', 'Рыба', 'Овощи', 'Фрукты', 'Крупы', 'Молочные продукты', 'Орехи', 'Сладости'
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'dislikes',
@@ -142,7 +143,8 @@ export default function NutritionPlansPage() {
       type: 'multi-select',
       options: [
         'Мясо', 'Рыба', 'Овощи', 'Фрукты', 'Крупы', 'Молочные продукты', 'Орехи', 'Сладости'
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'budget',
@@ -152,7 +154,8 @@ export default function NutritionPlansPage() {
         { value: 'low', label: 'Экономный', icon: DollarSign },
         { value: 'medium', label: 'Средний', icon: DollarSign },
         { value: 'high', label: 'Высокий', icon: DollarSign }
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'cookingTime',
@@ -162,7 +165,8 @@ export default function NutritionPlansPage() {
         { value: 'quick', label: 'Быстро (до 15 мин)', icon: Clock },
         { value: 'medium', label: 'Средне (15-30 мин)', icon: Clock },
         { value: 'elaborate', label: 'Подробно (30+ мин)', icon: Clock }
-      ]
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
     },
     {
       id: 'mealsPerDay',
@@ -173,7 +177,8 @@ export default function NutritionPlansPage() {
         { value: 4, label: '4 раза в день' },
         { value: 5, label: '5 раз в день' },
         { value: 6, label: '6 раз в день' }
-      ]
+      ],
+      skipIfSaved: false // Всегда спрашиваем, так как это может меняться
     }
   ];
 

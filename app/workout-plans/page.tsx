@@ -75,18 +75,6 @@ export default function WorkoutPlansPage() {
 
   const questions = [
     {
-      id: 'goals',
-      title: 'Какова ваша основная цель тренировок?',
-      type: 'select',
-      options: [
-        { value: 'lose_weight', label: 'Похудеть', icon: TrendingUp },
-        { value: 'gain_muscle', label: 'Набрать мышечную массу', icon: Dumbbell },
-        { value: 'improve_strength', label: 'Улучшить силу', icon: Dumbbell },
-        { value: 'endurance', label: 'Развить выносливость', icon: Heart },
-        { value: 'flexibility', label: 'Улучшить гибкость', icon: Activity }
-      ]
-    },
-    {
       id: 'experience',
       title: 'Какой у вас опыт тренировок?',
       type: 'select',
@@ -181,6 +169,24 @@ export default function WorkoutPlansPage() {
     setStep('generating');
     
     try {
+      // Сохраняем предпочтения в базу данных
+      const saveResponse = await fetch('/api/plans/preferences', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-telegram-user-id': window.Telegram?.WebApp?.initDataUnsafe?.user?.id?.toString() || ''
+        },
+        body: JSON.stringify({
+          planType: 'workout',
+          preferences
+        })
+      });
+
+      if (!saveResponse.ok) {
+        console.warn('⚠️ Не удалось сохранить предпочтения:', await saveResponse.text());
+      }
+
+      // Генерируем план
       const response = await fetch('/api/workout-plans/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

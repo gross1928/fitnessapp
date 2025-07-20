@@ -69,17 +69,6 @@ export default function NutritionPlansPage() {
 
   const questions = [
     {
-      id: 'goals',
-      title: 'Какова ваша основная цель?',
-      type: 'select',
-      options: [
-        { value: 'lose_weight', label: 'Похудеть', icon: TrendingUp },
-        { value: 'gain_muscle', label: 'Набрать мышечную массу', icon: TrendingUp },
-        { value: 'maintain', label: 'Поддерживать текущий вес', icon: Target },
-        { value: 'improve_health', label: 'Улучшить здоровье', icon: Heart }
-      ]
-    },
-    {
       id: 'allergies',
       title: 'Есть ли у вас аллергии или непереносимости?',
       type: 'multi-select',
@@ -174,6 +163,24 @@ export default function NutritionPlansPage() {
     setStep('generating');
     
     try {
+      // Сохраняем предпочтения в базу данных
+      const saveResponse = await fetch('/api/plans/preferences', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-telegram-user-id': window.Telegram?.WebApp?.initDataUnsafe?.user?.id?.toString() || ''
+        },
+        body: JSON.stringify({
+          planType: 'nutrition',
+          preferences
+        })
+      });
+
+      if (!saveResponse.ok) {
+        console.warn('⚠️ Не удалось сохранить предпочтения:', await saveResponse.text());
+      }
+
+      // Генерируем план
       const response = await fetch('/api/nutrition-plans/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

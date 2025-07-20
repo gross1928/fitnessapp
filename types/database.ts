@@ -529,6 +529,106 @@ export type Database = {
           },
         ]
       }
+      user_nutrition_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          allergies: string[]
+          likes: string[]
+          dislikes: string[]
+          budget: string
+          cooking_time: string
+          meals_per_day: number
+          dietary_restrictions: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          allergies?: string[]
+          likes?: string[]
+          dislikes?: string[]
+          budget?: string
+          cooking_time?: string
+          meals_per_day?: number
+          dietary_restrictions?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          allergies?: string[]
+          likes?: string[]
+          dislikes?: string[]
+          budget?: string
+          cooking_time?: string
+          meals_per_day?: number
+          dietary_restrictions?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_nutrition_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_workout_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          experience: string
+          available_days: number[]
+          session_duration: string
+          equipment: string[]
+          injuries: string[]
+          fitness_level: number
+          preferred_exercises: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          experience?: string
+          available_days?: number[]
+          session_duration?: string
+          equipment?: string[]
+          injuries?: string[]
+          fitness_level?: number
+          preferred_exercises?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          experience?: string
+          available_days?: number[]
+          session_duration?: string
+          equipment?: string[]
+          injuries?: string[]
+          fitness_level?: number
+          preferred_exercises?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_workout_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

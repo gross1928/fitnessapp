@@ -244,35 +244,53 @@ export interface TelegramUser {
 // --- Plan Generation Types ---
 
 export interface MealDetail {
-  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  type: string; // "Завтрак", "Обед", "Ужин", etc.
+  name: string;
   description: string;
   calories: number;
   protein: number;
   fats: number;
   carbs: number;
+  ingredients: string[];
+  instructions: string[];
+  prepTime: number;
+  cost: 'low' | 'medium' | 'high';
 }
 
-export interface DailyNutritionPlan {
-  day_of_week: number; // 1-7
+export interface NutritionPlan {
+  id: string;
+  goal: string;
+  dailyCalories: number;
   meals: MealDetail[];
+  tips: string[];
+  shoppingList: string[];
 }
 
 export interface WorkoutExercise {
   name: string;
   sets: number;
   reps: string; // e.g., "8-12" or "15"
-  rest_seconds: number;
+  rest: number; // seconds
+  description: string;
+  muscleGroups: string[];
+  equipment: string[];
 }
 
-export interface DailyWorkoutPlan {
-  day_of_week: number; // 1-7
-  description: string; // e.g., "Leg Day", "Cardio"
-  exercises: WorkoutExercise[];
-}
-
-export interface GeneratedPlan {
-  nutrition_plan: DailyNutritionPlan[];
-  workout_plan: DailyWorkoutPlan[];
+export interface WorkoutPlan {
+  id: string;
+  goal: string;
+  duration: number; // days
+  workout: {
+    name: string;
+    type: string; // "Силовая", "Кардио", "Функциональная"
+    duration: number; // minutes
+    difficulty: string; // "Легкая", "Средняя", "Сложная"
+    exercises: WorkoutExercise[];
+    warmup: string[];
+    cooldown: string[];
+  };
+  equipment: string[];
+  tips: string[];
 }
 
 export interface PlanGenerationParams {

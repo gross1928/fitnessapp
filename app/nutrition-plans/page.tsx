@@ -33,20 +33,17 @@ interface NutritionPlan {
   goal: string;
   dailyCalories: number;
   meals: {
-    day: number;
-    meals: {
-      type: string;
-      name: string;
-      description: string;
-      calories: number;
-      protein: number;
-      fats: number;
-      carbs: number;
-      ingredients: string[];
-      instructions: string[];
-      prepTime: number;
-      cost: 'low' | 'medium' | 'high';
-    }[];
+    type: string;
+    name: string;
+    description: string;
+    calories: number;
+    protein: number;
+    fats: number;
+    carbs: number;
+    ingredients: string[];
+    instructions: string[];
+    prepTime: number;
+    cost: 'low' | 'medium' | 'high';
   }[];
   tips: string[];
   shoppingList: string[];
@@ -218,22 +215,17 @@ export default function NutritionPlansPage() {
         dailyCalories: 2000,
         meals: [
           {
-            day: 1,
-            meals: [
-              {
-                type: 'Завтрак',
-                name: 'Овсянка с ягодами',
-                description: 'Питательная овсянка с свежими ягодами и орехами',
-                calories: 350,
-                protein: 12,
-                fats: 8,
-                carbs: 55,
-                ingredients: ['Овсянка', 'Ягоды', 'Орехи', 'Мед'],
-                instructions: ['Сварить овсянку', 'Добавить ягоды и орехи', 'Полить медом'],
-                prepTime: 10,
-                cost: 'low'
-              }
-            ]
+            type: 'Завтрак',
+            name: 'Овсянка с ягодами',
+            description: 'Питательная овсянка с свежими ягодами и орехами',
+            calories: 350,
+            protein: 12,
+            fats: 8,
+            carbs: 55,
+            ingredients: ['Овсянка', 'Ягоды', 'Орехи', 'Мед'],
+            instructions: ['Сварить овсянку', 'Добавить ягоды и орехи', 'Полить медом'],
+            prepTime: 10,
+            cost: 'low'
           }
         ],
         tips: ['Пейте больше воды', 'Ешьте медленно', 'Не пропускайте приемы пищи'],
@@ -444,15 +436,12 @@ export default function NutritionPlansPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Utensils className="w-5 h-5 mr-2" />
-                    План питания на неделю
+                    План питания на день
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {plan.meals.map((day) => (
-                    <div key={day.day} className="mb-8">
-                      <h3 className="text-xl font-bold text-gray-800 mb-4">{getDayName(day.day)}</h3>
-                      <div className="space-y-4">
-                        {day.meals.map((meal, index) => (
+                  <div className="space-y-4">
+                    {plan.meals.map((meal, index) => (
                           <div key={index} className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4 border border-orange-200">
                             <div className="flex justify-between items-start mb-3">
                               <h4 className="font-bold text-lg text-gray-800">{meal.type}</h4>
@@ -507,8 +496,6 @@ export default function NutritionPlansPage() {
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ))}
                 </CardContent>
               </Card>
             </div>

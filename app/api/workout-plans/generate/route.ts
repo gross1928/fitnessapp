@@ -11,11 +11,10 @@ export async function POST(request: NextRequest) {
     const { goals, experience, availableDays, sessionDuration, equipment, injuries, fitnessLevel, preferredExercises } = body;
 
     const prompt = `
-Создай персональный план тренировок на неделю для человека со следующими характеристиками:
+Создай план тренировки на один день для человека со следующими характеристиками:
 
 Цель: ${goals}
 Опыт: ${experience}
-Дни тренировок: ${availableDays.join(', ')}
 Длительность сессии: ${sessionDuration}
 Оборудование: ${equipment.join(', ') || 'Только вес тела'}
 Травмы/ограничения: ${injuries.join(', ') || 'Нет'}
@@ -27,54 +26,30 @@ export async function POST(request: NextRequest) {
   "id": "unique_id",
   "goal": "описание цели",
   "duration": 1,
-  "workouts": [
-    {
-      "day": ${availableDays[0]},
-      "name": "название тренировки",
-      "type": "Силовая/Кардио/Функциональная",
-      "duration": число в минутах,
-      "difficulty": "Легкая/Средняя/Сложная",
-      "exercises": [
-        {
-          "name": "название упражнения",
-          "sets": число подходов,
-          "reps": "число повторений или время",
-          "rest": число секунд отдыха,
-          "description": "описание техники",
-          "muscleGroups": ["группа мышц1", "группа мышц2"],
-          "equipment": ["оборудование1", "оборудование2"]
-        }
-      ],
-      "warmup": ["упражнение1", "упражнение2"],
-      "cooldown": ["упражнение1", "упражнение2"]
-    }
-    ${availableDays.slice(1).map((day: number) => `,
-    {
-      "day": ${day},
-      "name": "название тренировки",
-      "type": "Силовая/Кардио/Функциональная",
-      "duration": число в минутах,
-      "difficulty": "Легкая/Средняя/Сложная",
-      "exercises": [
-        {
-          "name": "название упражнения",
-          "sets": число подходов,
-          "reps": "число повторений или время",
-          "rest": число секунд отдыха,
-          "description": "описание техники",
-          "muscleGroups": ["группа мышц1", "группа мышц2"],
-          "equipment": ["оборудование1", "оборудование2"]
-        }
-      ],
-      "warmup": ["упражнение1", "упражнение2"],
-      "cooldown": ["упражнение1", "упражнение2"]
-    }`).join('')}
-  ],
-  "equipment": ["оборудование1", "оборудование2"]
+  "workout": {
+    "name": "название тренировки",
+    "type": "Силовая/Кардио/Функциональная",
+    "duration": число в минутах,
+    "difficulty": "Легкая/Средняя/Сложная",
+    "exercises": [
+      {
+        "name": "название упражнения",
+        "sets": число подходов,
+        "reps": "число повторений или время",
+        "rest": число секунд отдыха,
+        "description": "описание техники",
+        "muscleGroups": ["группа мышц1", "группа мышц2"],
+        "equipment": ["оборудование1", "оборудование2"]
+      }
+    ],
+    "warmup": ["упражнение1", "упражнение2"],
+    "cooldown": ["упражнение1", "упражнение2"]
+  },
+  "equipment": ["оборудование1", "оборудование2"],
+  "tips": ["совет1", "совет2", "совет3"]
 }
 
-ВАЖНО: Создай тренировки ТОЛЬКО для выбранных дней: ${availableDays.join(', ')}. Не создавай тренировки для других дней!
-Учти все ограничения и предпочтения. Сделай план прогрессивным и безопасным.
+Важно: создай только одну тренировку на день, не на неделю. Учти все ограничения и предпочтения. Сделай план безопасным и эффективным.
 `;
 
     const completion = await openai.chat.completions.create({
@@ -82,7 +57,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "Ты эксперт по фитнесу и тренировкам. Создавай только валидный JSON без дополнительного текста."
+          content: "Ты эксперт по фитнесу и тренировкам. Создавай простые, эффективные и безопасные планы тренировок."
         },
         {
           role: "user",
@@ -90,29 +65,65 @@ export async function POST(request: NextRequest) {
         }
       ],
       temperature: 0.7,
+      max_tokens: 2000
     });
 
-    const response = completion.choices[0]?.message?.content;
+    const responseText = completion.choices[0]?.message?.content;
     
-    if (!response) {
-      throw new Error('Не удалось получить ответ от ИИ');
+    if (!responseText) {
+      throw new Error('Пустой ответ от OpenAI');
     }
 
-    // Пытаемся извлечь JSON из ответа
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    // Извлекаем JSON из ответа
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error('Неверный формат ответа от ИИ');
+      throw new Error('Не удалось найти JSON в ответе');
     }
 
-    const plan = JSON.parse(jsonMatch[0]);
+    const planData = JSON.parse(jsonMatch[0]);
+    
+    console.log('✅ План тренировки успешно сгенерирован:', planData);
 
-    return NextResponse.json(plan);
+    return NextResponse.json(planData);
 
   } catch (error) {
-    console.error('Ошибка генерации плана тренировок:', error);
-    return NextResponse.json(
-      { error: 'Ошибка генерации плана тренировок' },
-      { status: 500 }
-    );
+    console.error('❌ Ошибка генерации плана тренировок:', error);
+    
+    // Возвращаем демо-план в случае ошибки
+    return NextResponse.json({
+      id: 'demo',
+      goal: 'Улучшение силы',
+      duration: 1,
+      workout: {
+        name: 'Тренировка груди и трицепса',
+        type: 'Силовая',
+        duration: 45,
+        difficulty: 'Средняя',
+        exercises: [
+          {
+            name: 'Отжимания',
+            sets: 3,
+            reps: '10-15',
+            rest: 60,
+            description: 'Классические отжимания от пола',
+            muscleGroups: ['Грудь', 'Трицепс'],
+            equipment: ['Вес тела']
+          },
+          {
+            name: 'Приседания',
+            sets: 3,
+            reps: '15-20',
+            rest: 60,
+            description: 'Классические приседания',
+            muscleGroups: ['Ноги', 'Ягодицы'],
+            equipment: ['Вес тела']
+          }
+        ],
+        warmup: ['Легкая разминка 5 минут', 'Растяжка мышц'],
+        cooldown: ['Растяжка 5 минут', 'Восстановление дыхания']
+      },
+      equipment: ['Коврик'],
+      tips: ['Разминайтесь перед тренировкой', 'Следите за техникой', 'Не пропускайте тренировки']
+    });
   }
 } 

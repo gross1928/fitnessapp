@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -264,7 +264,7 @@ export default function NutritionPlansPage() {
                         className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 group"
                       >
                         <div className="flex items-center">
-                          {optionIcon && <optionIcon className="w-5 h-5 mr-3 text-orange-600" />}
+                          {optionIcon && React.createElement(optionIcon, { className: "w-5 h-5 mr-3 text-orange-600" })}
                           <span className="font-medium">{optionLabel}</span>
                           <ArrowRight className="w-4 h-4 ml-auto text-gray-400 group-hover:text-orange-600 transition-colors" />
                         </div>
@@ -274,32 +274,37 @@ export default function NutritionPlansPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {question.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        const current = preferences[question.id as keyof NutritionPreferences] as string[];
-                        const newValue = current.includes(option) 
-                          ? current.filter(item => item !== option)
-                          : [...current, option];
-                        handleAnswer(newValue);
-                      }}
-                      className={`w-full p-4 text-left border rounded-xl transition-all duration-200 ${
-                        (preferences[question.id as keyof NutritionPreferences] as string[])?.includes(option)
-                          ? 'border-orange-500 bg-orange-50 text-orange-700'
-                          : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <CheckCircle className={`w-5 h-5 mr-3 ${
-                          (preferences[question.id as keyof NutritionPreferences] as string[])?.includes(option)
-                            ? 'text-orange-600'
-                            : 'text-gray-400'
-                        }`} />
-                        <span className="font-medium">{option}</span>
-                      </div>
-                    </button>
-                  ))}
+                  {question.options?.map((option, index) => {
+                    const optionValue = typeof option === 'string' ? option : String(option.value);
+                    const optionLabel = typeof option === 'string' ? option : option.label;
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          const current = preferences[question.id as keyof NutritionPreferences] as string[];
+                          const newValue = current.includes(optionValue) 
+                            ? current.filter(item => item !== optionValue)
+                            : [...current, optionValue];
+                          handleAnswer(newValue);
+                        }}
+                        className={`w-full p-4 text-left border rounded-xl transition-all duration-200 ${
+                          (preferences[question.id as keyof NutritionPreferences] as string[])?.includes(optionValue)
+                            ? 'border-orange-500 bg-orange-50 text-orange-700'
+                            : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <CheckCircle className={`w-5 h-5 mr-3 ${
+                            (preferences[question.id as keyof NutritionPreferences] as string[])?.includes(optionValue)
+                              ? 'text-orange-600'
+                              : 'text-gray-400'
+                          }`} />
+                          <span className="font-medium">{optionLabel}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

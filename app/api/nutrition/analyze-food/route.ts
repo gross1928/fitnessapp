@@ -66,12 +66,16 @@ export async function POST(req: NextRequest) {
       throw new Error('Не удалось проанализировать изображение или получить данные о калориях')
     }
     
-    // Сначала создаем food_item (обязательно для foreign key)
+    // Создаем уникальное название для каждого приема пищи
+    const timestamp = new Date().toISOString()
+    const uniqueFoodName = `${analysisJson.detected_food} (${timestamp})`
+    
+    // Всегда создаем новый food_item для точного учета КБЖУ
     const { data: foodItem, error: foodItemError } = await supabase
       .from('food_items')
       .insert({
         user_id: user.id,
-        name: analysisJson.detected_food,
+        name: uniqueFoodName,
         calories_per_100g: analysisJson.estimated_calories,
         proteins_per_100g: analysisJson.estimated_nutrition.proteins,
         fats_per_100g: analysisJson.estimated_nutrition.fats,

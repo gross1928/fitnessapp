@@ -66,6 +66,8 @@ export default function NutritionPlansPage() {
   });
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [plan, setPlan] = useState<NutritionPlan | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const questions = [
     {
@@ -231,6 +233,46 @@ export default function NutritionPlansPage() {
   const getDayName = (dayNumber: number) => {
     const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
     return days[dayNumber - 1];
+  };
+
+  const savePlan = async () => {
+    if (!plan) return;
+    
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/plans/save', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-telegram-user-id': window.Telegram?.WebApp?.initDataUnsafe?.user?.id?.toString() || ''
+        },
+        body: JSON.stringify({
+          planType: 'nutrition',
+          planData: plan,
+          name: `План питания - ${new Date().toLocaleDateString('ru-RU')}`
+        })
+      });
+
+      if (response.ok) {
+        alert('План успешно сохранен!');
+      } else {
+        throw new Error('Ошибка сохранения');
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения:', error);
+      alert('Не удалось сохранить план');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const generateNewPlan = async () => {
+    setIsGenerating(true);
+    try {
+      await generatePlan();
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   if (step === 'onboarding') {
@@ -485,14 +527,35 @@ export default function NutritionPlansPage() {
                   <CardTitle>Действия</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full" variant="outline">
-                    Сохранить план
+                  <Button 
+                    onClick={savePlan} 
+                    disabled={isSaving}
+                    className="w-full" 
+                    variant="outline"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Сохранение...
+                      </>
+                    ) : (
+                      'Сохранить план'
+                    )}
                   </Button>
-                  <Button className="w-full" variant="outline">
-                    Поделиться
-                  </Button>
-                  <Button className="w-full" variant="outline">
-                    Создать новый план
+                  <Button 
+                    onClick={generateNewPlan}
+                    disabled={isGenerating}
+                    className="w-full" 
+                    variant="outline"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Генерация...
+                      </>
+                    ) : (
+                      'Создать новый план'
+                    )}
                   </Button>
                 </CardContent>
               </Card>

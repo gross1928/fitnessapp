@@ -629,6 +629,66 @@ export type Database = {
           },
         ]
       }
+      user_workout_plans: {
+        Row: {
+          id: string
+          user_id: string
+          plan_data: Json
+          created_at: string
+          updated_at: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_data: Json
+          created_at?: string
+          updated_at?: string
+          is_active?: boolean
+          name?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_data?: Json
+          created_at?: string
+          updated_at?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      user_nutrition_plans: {
+        Row: {
+          id: string
+          user_id: string
+          plan_data: Json
+          created_at: string
+          updated_at: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_data: Json
+          created_at?: string
+          updated_at?: string
+          is_active?: boolean
+          name?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_data?: Json
+          created_at?: string
+          updated_at?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

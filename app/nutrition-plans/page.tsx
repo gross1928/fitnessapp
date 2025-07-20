@@ -252,19 +252,25 @@ export default function NutritionPlansPage() {
             <CardContent>
               {question.type === 'select' ? (
                 <div className="space-y-3">
-                  {question.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer(option.value)}
-                      className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 group"
-                    >
-                      <div className="flex items-center">
-                        {option.icon && <option.icon className="w-5 h-5 mr-3 text-orange-600" />}
-                        <span className="font-medium">{option.label}</span>
-                        <ArrowRight className="w-4 h-4 ml-auto text-gray-400 group-hover:text-orange-600 transition-colors" />
-                      </div>
-                    </button>
-                  ))}
+                  {question.options.map((option, index) => {
+                    const optionValue = typeof option === 'string' ? option : option.value;
+                    const optionLabel = typeof option === 'string' ? option : option.label;
+                    const optionIcon = typeof option === 'object' && 'icon' in option ? option.icon : null;
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswer(optionValue)}
+                        className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 group"
+                      >
+                        <div className="flex items-center">
+                          {optionIcon && <optionIcon className="w-5 h-5 mr-3 text-orange-600" />}
+                          <span className="font-medium">{optionLabel}</span>
+                          <ArrowRight className="w-4 h-4 ml-auto text-gray-400 group-hover:text-orange-600 transition-colors" />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="space-y-3">

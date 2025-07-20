@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -263,19 +263,25 @@ export default function WorkoutPlansPage() {
             <CardContent>
               {question.type === 'select' ? (
                 <div className="space-y-3">
-                  {question.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer(option.value)}
-                      className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
-                    >
-                      <div className="flex items-center">
-                        {option.icon && <option.icon className="w-5 h-5 mr-3 text-blue-600" />}
-                        <span className="font-medium">{option.label}</span>
-                        <ArrowRight className="w-4 h-4 ml-auto text-gray-400 group-hover:text-blue-600 transition-colors" />
-                      </div>
-                    </button>
-                  ))}
+                  {question.options?.map((option, index) => {
+                    const optionValue = typeof option === 'string' ? option : option.value;
+                    const optionLabel = typeof option === 'string' ? option : option.label;
+                    const optionIcon = typeof option === 'object' && 'icon' in option ? option.icon : null;
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswer(optionValue)}
+                        className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
+                      >
+                        <div className="flex items-center">
+                          {optionIcon && React.createElement(optionIcon, { className: "w-5 h-5 mr-3 text-blue-600" })}
+                          <span className="font-medium">{optionLabel}</span>
+                          <ArrowRight className="w-4 h-4 ml-auto text-gray-400 group-hover:text-blue-600 transition-colors" />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : question.type === 'slider' ? (
                 <div className="space-y-4">
@@ -301,32 +307,37 @@ export default function WorkoutPlansPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {question.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        const current = preferences[question.id as keyof WorkoutPreferences] as any[];
-                        const newValue = current.includes(option.value || option) 
-                          ? current.filter(item => item !== (option.value || option))
-                          : [...current, option.value || option];
-                        handleAnswer(newValue);
-                      }}
-                      className={`w-full p-4 text-left border rounded-xl transition-all duration-200 ${
-                        (preferences[question.id as keyof WorkoutPreferences] as any[])?.includes(option.value || option)
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <CheckCircle className={`w-5 h-5 mr-3 ${
-                          (preferences[question.id as keyof WorkoutPreferences] as any[])?.includes(option.value || option)
-                            ? 'text-blue-600'
-                            : 'text-gray-400'
-                        }`} />
-                        <span className="font-medium">{option.label || option}</span>
-                      </div>
-                    </button>
-                  ))}
+                  {question.options?.map((option, index) => {
+                    const optionValue = typeof option === 'string' ? option : option.value;
+                    const optionLabel = typeof option === 'string' ? option : option.label;
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          const current = preferences[question.id as keyof WorkoutPreferences] as any[];
+                          const newValue = current.includes(optionValue) 
+                            ? current.filter(item => item !== optionValue)
+                            : [...current, optionValue];
+                          handleAnswer(newValue);
+                        }}
+                        className={`w-full p-4 text-left border rounded-xl transition-all duration-200 ${
+                          (preferences[question.id as keyof WorkoutPreferences] as any[])?.includes(optionValue)
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <CheckCircle className={`w-5 h-5 mr-3 ${
+                            (preferences[question.id as keyof WorkoutPreferences] as any[])?.includes(optionValue)
+                              ? 'text-blue-600'
+                              : 'text-gray-400'
+                          }`} />
+                          <span className="font-medium">{optionLabel}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

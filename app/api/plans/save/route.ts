@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
-    const { planData, planType, name } = await req.json();
+    const { planData, planType } = await req.json();
     const telegramUserId = req.headers.get('x-telegram-user-id');
 
     if (!telegramUserId || !planData || !planType) {
@@ -51,8 +51,7 @@ export async function POST(req: NextRequest) {
         .insert({
           user_id: user.id,
           plan_data: planData,
-          is_active: true,
-          name: name || `План тренировок - ${new Date().toLocaleDateString('ru-RU')}`
+          is_active: true
         })
         .select('id')
         .single();
@@ -65,8 +64,7 @@ export async function POST(req: NextRequest) {
         .insert({
           user_id: user.id,
           plan_data: planData,
-          is_active: true,
-          name: name || `План питания - ${new Date().toLocaleDateString('ru-RU')}`
+          is_active: true
         })
         .select('id')
         .single();

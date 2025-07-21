@@ -340,8 +340,7 @@ export default function NutritionPlansPage() {
         },
         body: JSON.stringify({
           planType: 'nutrition',
-          planData: plan,
-          name: `План питания - ${new Date().toLocaleDateString('ru-RU')}`
+          planData: plan
         })
       });
 

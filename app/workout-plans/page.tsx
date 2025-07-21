@@ -333,8 +333,7 @@ export default function WorkoutPlansPage() {
         },
         body: JSON.stringify({
           planType: 'workout',
-          planData: plan,
-          name: `План тренировок - ${new Date().toLocaleDateString('ru-RU')}`
+          planData: plan
         })
       });
 

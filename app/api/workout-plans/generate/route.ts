@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { getBaseProgram, adaptProgramToUser } from '@/lib/workout-programs';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -8,11 +9,34 @@ const openai = new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { goals, experience, availableDays, sessionDuration, equipment, injuries, fitnessLevel, preferredExercises } = body;
+    const { goals, experience, availableDays, sessionDuration, equipment, injuries, fitnessLevel, preferredExercises, gender } = body;
 
+    // Получаем базовую профессиональную программу
+    const { baseProgram, programType, difficulty } = getBaseProgram({
+      goals,
+      experience,
+      fitnessLevel,
+      gender: gender || 'male'
+    });
+
+    // Адаптируем программу под пользователя
+    const adaptedProgram = adaptProgramToUser(baseProgram, {
+      availableDays,
+      sessionDuration,
+      equipment,
+      injuries,
+      fitnessLevel
+    });
+
+    // Создаем промпт с учетом профессиональной программы
     const prompt = `
-Создай план тренировки на один день для человека со следующими характеристиками:
+Ты эксперт по фитнесу. Используй следующую профессиональную программу как ОСНОВУ для создания персонализированного плана:
 
+ТИП ПРОГРАММЫ: ${programType === 'powerlifting_and_strength' ? 'Пауэрлифтинг и силовые' : 'Бодибилдинг'}
+УРОВЕНЬ: ${difficulty}
+БАЗОВАЯ ПРОГРАММА: ${JSON.stringify(adaptedProgram?.adaptedDays?.[0] || [], null, 2)}
+
+ХАРАКТЕРИСТИКИ ПОЛЬЗОВАТЕЛЯ:
 Цель: ${goals}
 Опыт: ${experience}
 Длительность сессии: ${sessionDuration}
@@ -20,6 +44,13 @@ export async function POST(request: NextRequest) {
 Травмы/ограничения: ${injuries.join(', ') || 'Нет'}
 Уровень подготовки: ${fitnessLevel}/10
 Предпочитаемые упражнения: ${preferredExercises.join(', ') || 'Любые'}
+
+ВАЖНО: 
+1. НЕ КОПИРУЙ программу напрямую - создай ПЕРСОНАЛИЗИРОВАННЫЙ план на её основе
+2. Учти все ограничения пользователя
+3. Адаптируй упражнения под доступное оборудование
+4. Сделай план безопасным и эффективным
+5. ВСЕ ТЕКСТЫ НА РУССКОМ ЯЗЫКЕ
 
 Создай план в формате JSON со следующей структурой:
 {
@@ -48,8 +79,6 @@ export async function POST(request: NextRequest) {
   "equipment": ["оборудование1 на русском", "оборудование2 на русском"],
   "tips": ["совет1 на русском", "совет2 на русском", "совет3 на русском"]
 }
-
-ВАЖНО: ВСЕ ТЕКСТЫ ДОЛЖНЫ БЫТЬ НА РУССКОМ ЯЗЫКЕ! Создай только одну тренировку на день, не на неделю. Учти все ограничения и предпочтения. Сделай план безопасным и эффективным.
 `;
 
     const completion = await openai.chat.completions.create({

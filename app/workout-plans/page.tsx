@@ -31,6 +31,7 @@ interface WorkoutPreferences {
   injuries: string[];
   fitnessLevel: number;
   preferredExercises: string[];
+  gender: 'male' | 'female';
 }
 
 interface WorkoutPlan {
@@ -69,7 +70,8 @@ export default function WorkoutPlansPage() {
     equipment: [],
     injuries: [],
     fitnessLevel: 5,
-    preferredExercises: []
+    preferredExercises: [],
+    gender: 'male'
   });
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
@@ -125,7 +127,8 @@ export default function WorkoutPlansPage() {
             equipment: prefsData.data.preferences.equipment || [],
             injuries: prefsData.data.preferences.injuries || [],
             fitnessLevel: prefsData.data.preferences.fitness_level || 5,
-            preferredExercises: prefsData.data.preferences.preferred_exercises || []
+            preferredExercises: prefsData.data.preferences.preferred_exercises || [],
+            gender: prefsData.data.preferences.gender || 'male'
           };
           setSavedPreferences(workoutPrefs);
           setPreferences(workoutPrefs);
@@ -140,6 +143,16 @@ export default function WorkoutPlansPage() {
   };
 
   const questions = [
+    {
+      id: 'gender',
+      title: 'Укажите ваш пол',
+      type: 'select',
+      options: [
+        { value: 'male', label: 'Мужской', icon: Target },
+        { value: 'female', label: 'Женский', icon: Target }
+      ],
+      skipIfSaved: true // Пропускаем если уже сохранено
+    },
     {
       id: 'experience',
       title: 'Какой у вас опыт тренировок?',

@@ -18,7 +18,8 @@ import {
   Loader2,
   Play,
   Pause,
-  Timer
+  Timer,
+  ArrowLeft
 } from 'lucide-react';
 
 interface WorkoutPreferences {
@@ -418,7 +419,17 @@ export default function WorkoutPlansPage() {
     const question = questions[currentQuestion];
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 relative">
+        {/* Кнопка "Назад" */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.location.href = '/'}
+          className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Назад
+        </Button>
         <div className="max-w-lg mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
@@ -552,7 +563,17 @@ export default function WorkoutPlansPage() {
 
   if (step === 'generating') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4 relative">
+        {/* Кнопка "Назад" */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.location.href = '/'}
+          className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Назад
+        </Button>
         <div className="text-center">
           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
             <Loader2 className="w-10 h-10 text-white animate-spin" />
@@ -566,7 +587,17 @@ export default function WorkoutPlansPage() {
 
   if (step === 'plan' && plan) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 relative">
+        {/* Кнопка "Назад" */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.location.href = '/'}
+          className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Назад
+        </Button>
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div className="text-center bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white">

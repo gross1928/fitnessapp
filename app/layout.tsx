@@ -2,6 +2,7 @@ import React from 'react'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { ToastProvider } from '@/components/ui/toast'
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] })
 
@@ -75,11 +76,13 @@ export default function RootLayout({
           color: 'var(--tg-theme-text-color, hsl(var(--foreground)))',
         }}
       >
-        <div className="flex flex-col min-h-screen">
-          <main className="flex-1 relative">
-            {children}
-          </main>
-        </div>
+        <ToastProvider>
+          <div className="flex flex-col min-h-screen">
+            <main className="flex-1 relative">
+              {children}
+            </main>
+          </div>
+        </ToastProvider>
         
         {/* Telegram WebApp initialization - moved to after script load */}
         <script

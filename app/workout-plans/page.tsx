@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/toast';
 import { 
   Activity, 
   Dumbbell, 
@@ -57,6 +58,7 @@ interface WorkoutPlan {
 }
 
 export default function WorkoutPlansPage() {
+  const { addToast } = useToast();
   const [step, setStep] = useState<'loading' | 'onboarding' | 'generating' | 'plan'>('loading');
   const [preferences, setPreferences] = useState<WorkoutPreferences>({
     goals: 'improve_strength',
@@ -104,7 +106,7 @@ export default function WorkoutPlansPage() {
       }
 
       // Загружаем сохраненные предпочтения
-      const prefsResponse = await fetch('/api/plans/preferences', {
+      const prefsResponse = await fetch('/api/plans/preferences?planType=workout', {
         headers: {
           'x-telegram-user-id': telegramUserId
         }
@@ -113,8 +115,19 @@ export default function WorkoutPlansPage() {
       if (prefsResponse.ok) {
         const prefsData = await prefsResponse.json();
         if (prefsData.success && prefsData.data.preferences) {
-          setSavedPreferences(prefsData.data.preferences);
-          setPreferences(prefsData.data.preferences);
+          // Преобразуем данные из базы в формат компонента
+          const workoutPrefs = {
+            goals: prefsData.data.preferences.goals || 'improve_strength',
+            experience: prefsData.data.preferences.experience || 'beginner',
+            availableDays: prefsData.data.preferences.available_days || [1, 3, 5],
+            sessionDuration: prefsData.data.preferences.session_duration || 'medium',
+            equipment: prefsData.data.preferences.equipment || [],
+            injuries: prefsData.data.preferences.injuries || [],
+            fitnessLevel: prefsData.data.preferences.fitness_level || 5,
+            preferredExercises: prefsData.data.preferences.preferred_exercises || []
+          };
+          setSavedPreferences(workoutPrefs);
+          setPreferences(workoutPrefs);
         }
       }
 
@@ -326,33 +339,61 @@ export default function WorkoutPlansPage() {
       });
 
       if (response.ok) {
-        // План успешно сохранен - можно добавить уведомление в UI
-        console.log('План успешно сохранен');
+        const result = await response.json();
+        if (result.success) {
+          // План успешно сохранен
+          console.log('✅ План успешно сохранен');
+          addToast({
+            type: 'success',
+            title: 'План сохранен!',
+            message: 'Ваш план тренировок успешно сохранен'
+          });
+        } else {
+          throw new Error(result.error || 'Ошибка сохранения');
+        }
       } else {
-        throw new Error('Ошибка сохранения');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка сохранения');
       }
     } catch (error) {
-      console.error('Ошибка сохранения:', error);
-      // Можно добавить уведомление об ошибке в UI
+      console.error('❌ Ошибка сохранения:', error);
+      addToast({
+        type: 'error',
+        title: 'Ошибка сохранения',
+        message: error instanceof Error ? error.message : 'Неизвестная ошибка'
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
   const generateNewPlan = async () => {
-    setStep('onboarding');
-    setCurrentQuestion(0);
-    setPlan(null);
-    
-    // Сбрасываем только те предпочтения, которые нужно спрашивать заново
-    const newPreferences = { ...preferences };
-    questions.forEach(question => {
-      if (!question.skipIfSaved) {
-        // Сбрасываем только те поля, которые не помечены как skipIfSaved
-        delete newPreferences[question.id as keyof WorkoutPreferences];
+    setIsGenerating(true);
+    try {
+      // Генерируем новый план без повторного прохождения онбординга
+      const response = await fetch('/api/workout-plans/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(preferences)
+      });
+
+      if (response.ok) {
+        const planData = await response.json();
+        setPlan(planData);
+        setStep('plan');
+      } else {
+        throw new Error('Ошибка генерации нового плана');
       }
-    });
-    setPreferences(newPreferences);
+    } catch (error) {
+      console.error('❌ Ошибка генерации нового плана:', error);
+      addToast({
+        type: 'error',
+        title: 'Ошибка генерации',
+        message: error instanceof Error ? error.message : 'Неизвестная ошибка'
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const getDayName = (dayNumber: number) => {

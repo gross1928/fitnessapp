@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/toast';
 import { 
   Apple, 
   Utensils, 
@@ -50,6 +51,7 @@ interface NutritionPlan {
 }
 
 export default function NutritionPlansPage() {
+  const { addToast } = useToast();
   const [step, setStep] = useState<'loading' | 'onboarding' | 'generating' | 'plan'>('loading');
   const [preferences, setPreferences] = useState<NutritionPreferences>({
     allergies: [],
@@ -97,7 +99,7 @@ export default function NutritionPlansPage() {
       }
 
       // Загружаем сохраненные предпочтения
-      const prefsResponse = await fetch('/api/plans/preferences', {
+      const prefsResponse = await fetch('/api/plans/preferences?planType=nutrition', {
         headers: {
           'x-telegram-user-id': telegramUserId
         }
@@ -106,8 +108,19 @@ export default function NutritionPlansPage() {
       if (prefsResponse.ok) {
         const prefsData = await prefsResponse.json();
         if (prefsData.success && prefsData.data.preferences) {
-          setSavedPreferences(prefsData.data.preferences);
-          setPreferences(prefsData.data.preferences);
+          // Преобразуем данные из базы в формат компонента
+          const nutritionPrefs = {
+            allergies: prefsData.data.preferences.allergies || [],
+            dislikes: prefsData.data.preferences.dislikes || [],
+            likes: prefsData.data.preferences.likes || [],
+            budget: prefsData.data.preferences.budget || 'medium',
+            cookingTime: prefsData.data.preferences.cooking_time || 'medium',
+            mealsPerDay: prefsData.data.preferences.meals_per_day || 3,
+            dietaryRestrictions: prefsData.data.preferences.dietary_restrictions || [],
+            goals: prefsData.data.preferences.goals || 'maintain'
+          };
+          setSavedPreferences(nutritionPrefs);
+          setPreferences(nutritionPrefs);
         }
       }
 
@@ -333,33 +346,61 @@ export default function NutritionPlansPage() {
       });
 
       if (response.ok) {
-        // План успешно сохранен - можно добавить уведомление в UI
-        console.log('План успешно сохранен');
+        const result = await response.json();
+        if (result.success) {
+          // План успешно сохранен
+          console.log('✅ План успешно сохранен');
+          addToast({
+            type: 'success',
+            title: 'План сохранен!',
+            message: 'Ваш план питания успешно сохранен'
+          });
+        } else {
+          throw new Error(result.error || 'Ошибка сохранения');
+        }
       } else {
-        throw new Error('Ошибка сохранения');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка сохранения');
       }
     } catch (error) {
-      console.error('Ошибка сохранения:', error);
-      // Можно добавить уведомление об ошибке в UI
+      console.error('❌ Ошибка сохранения:', error);
+      addToast({
+        type: 'error',
+        title: 'Ошибка сохранения',
+        message: error instanceof Error ? error.message : 'Неизвестная ошибка'
+      });
     } finally {
       setIsSaving(false);
     }
   };
 
   const generateNewPlan = async () => {
-    setStep('onboarding');
-    setCurrentQuestion(0);
-    setPlan(null);
-    
-    // Сбрасываем только те предпочтения, которые нужно спрашивать заново
-    const newPreferences = { ...preferences };
-    questions.forEach(question => {
-      if (!question.skipIfSaved) {
-        // Сбрасываем только те поля, которые не помечены как skipIfSaved
-        delete newPreferences[question.id as keyof NutritionPreferences];
+    setIsGenerating(true);
+    try {
+      // Генерируем новый план без повторного прохождения онбординга
+      const response = await fetch('/api/nutrition-plans/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(preferences)
+      });
+
+      if (response.ok) {
+        const planData = await response.json();
+        setPlan(planData);
+        setStep('plan');
+      } else {
+        throw new Error('Ошибка генерации нового плана');
       }
-    });
-    setPreferences(newPreferences);
+    } catch (error) {
+      console.error('❌ Ошибка генерации нового плана:', error);
+      addToast({
+        type: 'error',
+        title: 'Ошибка генерации',
+        message: error instanceof Error ? error.message : 'Неизвестная ошибка'
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   if (step === 'loading') {

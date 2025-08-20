@@ -26,125 +26,79 @@ export async function POST(request: NextRequest) {
     // Используем service role клиент для обхода RLS
     const supabase = createServiceRoleClient()
 
-    // Проверяем, существует ли пользователь
-    const { data: existingUsers, error: checkError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('telegram_id', parseInt(telegramId))
+    // Единый upsert по telegram_id без предварительной проверки
+    const upsertData = {
+      telegram_id: parseInt(telegramId),
+      username,
+      first_name,
+      last_name,
+      name: first_name + (last_name ? ' ' + last_name : ''),
+      // created_at оставляем БД по дефолту при первом создании
+      updated_at: new Date().toISOString()
+    }
 
-    if (checkError) {
-      console.error('❌ Ошибка проверки существующего пользователя:', checkError)
+    console.log('📝 Upsert пользователя по telegram_id:', upsertData.telegram_id)
+
+    const { data: users, error } = await supabase
+      .from('users')
+      .upsert(upsertData, { onConflict: 'telegram_id' })
+      .select()
+
+    if (error) {
+      console.error('❌ Ошибка upsert пользователя:', error)
+      console.error('🔍 Детали ошибки:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       return NextResponse.json(
-        { success: false, error: 'Ошибка проверки пользователя' },
+        { 
+          success: false, 
+          error: `Ошибка сохранения профиля: ${error.message}`,
+          details: error.details || 'Подробности недоступны'
+        },
         { status: 500 }
       )
     }
 
-    const existingUser = existingUsers && existingUsers.length > 0 ? existingUsers[0] : null
+    const userRow = users && users.length > 0 ? users[0] : null
 
-    if (existingUser) {
-      console.log('✅ Пользователь уже существует:', existingUser.id)
-      
-      // Обновляем базовую информацию пользователя (на случай изменений в Telegram)
-      const { data: users, error: updateError } = await supabase
-        .from('users')
-        .update({
-          username,
-          first_name,
-          last_name,
-          updated_at: new Date().toISOString()
-        })
-        .eq('telegram_id', parseInt(telegramId))
-        .select()
-
-      if (updateError) {
-        console.error('⚠️ Ошибка обновления пользователя:', updateError)
-        // Не критичная ошибка, возвращаем существующего пользователя
-      }
-
-      // Проверяем, заполнены ли все необходимые поля для онбординга
-      const needsOnboarding = !existingUser.age || 
-                             !existingUser.height || 
-                             !existingUser.gender || 
-                             !existingUser.current_weight || 
-                             !existingUser.target_weight || 
-                             !existingUser.goal_type || 
-                             !existingUser.activity_level
-
-      console.log('🔍 Проверка онбординга для существующего пользователя:', {
-        age: !!existingUser.age,
-        height: !!existingUser.height,
-        gender: !!existingUser.gender,
-        current_weight: !!existingUser.current_weight,
-        target_weight: !!existingUser.target_weight,
-        goal_type: !!existingUser.goal_type,
-        activity_level: !!existingUser.activity_level,
-        needsOnboarding
-      })
-
-      return NextResponse.json({
-        success: true,
-        data: users && users.length > 0 ? users[0] : existingUser,
-        isNewUser: false,
-        needsOnboarding,
-        message: needsOnboarding ? 'Требуется завершить онбординг' : 'Пользователь найден'
-      })
-    } else {
-      console.log('🆕 Создаем нового пользователя')
-      
-      // Создаем нового пользователя с базовой информацией
-      const newUserData = {
-        telegram_id: parseInt(telegramId),
-        username,
-        first_name,
-        last_name,
-        name: first_name + (last_name ? ' ' + last_name : ''), // Базовое имя из Telegram
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-
-      console.log('📝 Данные нового пользователя:', newUserData)
-
-      const { data: users, error } = await supabase
-        .from('users')
-        .insert(newUserData)
-        .select()
-
-      if (error) {
-        console.error('❌ Ошибка создания пользователя:', error)
-        console.error('🔍 Детали ошибки:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: `Ошибка создания профиля: ${error.message}`,
-            details: error.details || 'Подробности недоступны'
-          },
-          { status: 500 }
-        )
-      }
-
-      if (!users || users.length === 0) {
-        console.error('❌ Пользователь не был создан - массив users пуст')
-        return NextResponse.json(
-          { success: false, error: 'Пользователь не был создан' },
-          { status: 500 }
-        )
-      }
-
-      console.log('✅ Новый пользователь успешно создан:', users[0].id)
-      return NextResponse.json({
-        success: true,
-        data: users[0],
-        isNewUser: true,
-        needsOnboarding: true,
-        message: 'Добро пожаловать! Пользователь зарегистрирован.'
-      })
+    if (!userRow) {
+      console.error('❌ Пользователь не был сохранен - пустой ответ upsert')
+      return NextResponse.json(
+        { success: false, error: 'Пользователь не был сохранен' },
+        { status: 500 }
+      )
     }
+
+    // Проверяем, нужен ли онбординг по заполненности ключевых полей
+    const needsOnboarding = !userRow.age || 
+                           !userRow.height || 
+                           !userRow.gender || 
+                           !userRow.current_weight || 
+                           !userRow.target_weight || 
+                           !userRow.goal_type || 
+                           !userRow.activity_level
+
+    console.log('🔍 Проверка онбординга после upsert:', {
+      age: !!userRow.age,
+      height: !!userRow.height,
+      gender: !!userRow.gender,
+      current_weight: !!userRow.current_weight,
+      target_weight: !!userRow.target_weight,
+      goal_type: !!userRow.goal_type,
+      activity_level: !!userRow.activity_level,
+      needsOnboarding
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: userRow,
+      isNewUser: false,
+      needsOnboarding,
+      message: needsOnboarding ? 'Требуется завершить онбординг' : 'Пользователь сохранен'
+    })
 
   } catch (error) {
     console.error('💥 Критическая ошибка API регистрации:', error)

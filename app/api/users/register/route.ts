@@ -26,6 +26,12 @@ export async function POST(request: NextRequest) {
 
     // Используем service role клиент для обхода RLS
     const supabase = createServiceRoleClient()
+    
+    // Добавляем логирование для диагностики
+    console.log('🔧 Supabase клиент создан')
+    console.log('🔧 Проверяем переменные окружения:')
+    console.log('🔧 NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Установлен' : '❌ Отсутствует')
+    console.log('🔧 SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Установлен' : '❌ Отсутствует')
 
     // Единый upsert по telegram_id без предварительной проверки
     const upsertData = {
@@ -39,11 +45,30 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📝 Upsert пользователя по telegram_id:', upsertData.telegram_id)
+    console.log('📝 Данные для upsert:', JSON.stringify(upsertData, null, 2))
 
-    const { data: users, error } = await supabase
-      .from('users')
-      .upsert(upsertData, { onConflict: 'telegram_id' })
-      .select()
+    // Добавляем try-catch для Supabase запроса
+    let users, error
+    try {
+      const result = await supabase
+        .from('users')
+        .upsert(upsertData, { onConflict: 'telegram_id' })
+        .select()
+      
+      users = result.data
+      error = result.error
+      
+      console.log('🔧 Результат Supabase запроса:', { users, error })
+      
+    } catch (supabaseError) {
+      console.error('💥 Ошибка при выполнении Supabase запроса:', supabaseError)
+      error = {
+        message: supabaseError instanceof Error ? supabaseError.message : 'Неизвестная ошибка Supabase',
+        details: supabaseError instanceof Error ? supabaseError.stack : 'Stack trace недоступен',
+        hint: 'Ошибка произошла при выполнении запроса к базе данных',
+        code: 'SUPABASE_ERROR'
+      }
+    }
 
     if (error) {
       console.error('❌ Ошибка upsert пользователя:', error)
@@ -56,7 +81,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          error: `Ошибка сохранения профиля: ${error.message}`,
+          error: `Ошибка сохранения профиля: ${error.message || 'Неизвестная ошибка'}`,
           details: error.details || 'Подробности недоступны'
         },
         { status: 500 }

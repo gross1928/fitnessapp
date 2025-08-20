@@ -1,0 +1,1 @@
+[33m81374d5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m users/register: switch to single upsert by telegram_id; remove pre-check
